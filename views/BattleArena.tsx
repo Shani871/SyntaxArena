@@ -19,6 +19,7 @@ export const BattleArena: React.FC<BattleArenaProps> = ({ mode = GameMode.BATTLE
 }`);
     const [isLoading, setIsLoading] = useState(false);
     const [currentXp, setCurrentXp] = useState(MOCK_USER.xp);
+    const [selectedLanguage, setSelectedLanguage] = useState<'java' | 'python' | 'javascript'>('java');
 
     // Tabs State
     const [activeLeftTab, setActiveLeftTab] = useState<'DESCRIPTION' | 'SUBMISSIONS' | 'CONFIG'>('DESCRIPTION');
@@ -90,7 +91,7 @@ export const BattleArena: React.FC<BattleArenaProps> = ({ mode = GameMode.BATTLE
         const backendQuestion = await apiService.generateQuestion(
             difficulty === 'Easy' ? 'Arrays' : difficulty === 'Medium' ? 'Dynamic Programming' : 'Graph', // Map difficulty to topic for demo
             difficulty,
-            'Java' // Default language request
+            selectedLanguage // Use selected language
         );
 
         if (backendQuestion) {
@@ -232,13 +233,7 @@ export const BattleArena: React.FC<BattleArenaProps> = ({ mode = GameMode.BATTLE
         setMessages(prev => [...prev, { role: 'user', text: ">> RUNNING CODE..." }]);
 
         // Execute via Backend
-        // Determine language - defaulting to 'java' since user asked for Java Backend, 
-        // but the editor might be in JS mode. For now, we'll try to infer or just send 'java' if it looks like java.
-        // The current editor default is JS `function solve...`.
-        // Let's assume we map it based on content or user preference.
-        const language = code.includes("public class") ? "java" : "javascript"; // Simple heuristic
-
-        const result = await apiService.executeCode(language, code);
+        const result = await apiService.executeCode(selectedLanguage, code);
 
         setIsLoading(false);
         setIsConsoleOpen(true);
@@ -348,6 +343,18 @@ export const BattleArena: React.FC<BattleArenaProps> = ({ mode = GameMode.BATTLE
                 </div>
 
                 <div className="flex items-center gap-3">
+                    <div className="flex items-center bg-[#1e1e1e] rounded border border-[#333] px-2 py-1">
+                        <select
+                            value={selectedLanguage}
+                            onChange={(e) => setSelectedLanguage(e.target.value as any)}
+                            className="bg-transparent text-xs font-bold text-gray-300 outline-none cursor-pointer"
+                        >
+                            <option value="java">Java</option>
+                            <option value="python">Python</option>
+                            <option value="javascript">JavaScript</option>
+                        </select>
+                    </div>
+
                     <div className={`flex items-center gap-2 bg-[#111] px-3 py-1.5 rounded-lg border border-[#333] ${battle.timeLeft < 60 && mode !== GameMode.PRACTICE ? 'border-red-900/50' : ''}`}>
                         <Timer size={14} className={battle.timeLeft < 60 && mode !== GameMode.PRACTICE ? 'text-red-500 animate-pulse' : 'text-[#858585]'} />
                         <span className="font-mono text-lg font-bold text-white">
@@ -463,8 +470,8 @@ export const BattleArena: React.FC<BattleArenaProps> = ({ mode = GameMode.BATTLE
                                                 key={diff}
                                                 onClick={() => loadPracticeProblem(diff)}
                                                 className={`flex-1 py-2 text-xs font-bold rounded transition-all border ${practiceDifficulty === diff
-                                                        ? 'bg-cyber-neon/10 text-cyber-neon border-cyber-neon'
-                                                        : 'bg-[#252526] text-[#666] border-transparent hover:bg-[#333]'
+                                                    ? 'bg-cyber-neon/10 text-cyber-neon border-cyber-neon'
+                                                    : 'bg-[#252526] text-[#666] border-transparent hover:bg-[#333]'
                                                     }`}
                                             >
                                                 {diff}

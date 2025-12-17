@@ -20,7 +20,7 @@ public class ExecutionService {
     public ExecutionResponse executeCode(ExecutionRequest request) {
         String language = request.getLanguage();
         String code = request.getCode();
-        
+
         try {
             if ("python".equalsIgnoreCase(language)) {
                 return executePython(code);
@@ -55,13 +55,16 @@ public class ExecutionService {
     }
 
     private ExecutionResponse executeJava(String code) throws IOException, InterruptedException {
-        // Java is trickier because of class names. We'll assume the class is called 'Main' or try to extract it.
-        // For simplicity in this demo, we require the user to wrap code in 'public class Main { public static void main(String[] args) { ... } }'
-        // Or we wrap it if it's a snippet.
-        // Let's assume the user sends a full class 'Main'.
-        
+        // Extract class name to match filename
+        String className = "Main";
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("public\\s+class\\s+(\\w+)");
+        java.util.regex.Matcher matcher = pattern.matcher(code);
+        if (matcher.find()) {
+            className = matcher.group(1);
+        }
+
         Path tempDir = Files.createTempDirectory("java_exec");
-        File sourceFile = new File(tempDir.toFile(), "Main.java");
+        File sourceFile = new File(tempDir.toFile(), className + ".java");
         try (FileWriter writer = new FileWriter(sourceFile)) {
             writer.write(code);
         }
@@ -78,14 +81,14 @@ public class ExecutionService {
         }
 
         // Run
-        ProcessBuilder runPb = new ProcessBuilder("java", "-cp", tempDir.toAbsolutePath().toString(), "Main");
+        ProcessBuilder runPb = new ProcessBuilder("java", "-cp", tempDir.toAbsolutePath().toString(), className);
         Process runProcess = runPb.start();
-        
+
         String output = new BufferedReader(new InputStreamReader(runProcess.getInputStream()))
                 .lines().collect(Collectors.joining("\n"));
         String error = new BufferedReader(new InputStreamReader(runProcess.getErrorStream()))
                 .lines().collect(Collectors.joining("\n"));
-        
+
         boolean finished = runProcess.waitFor(5, TimeUnit.SECONDS);
         if (!finished) {
             runProcess.destroy();
