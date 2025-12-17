@@ -53,7 +53,29 @@ export enum GameMode {
   PROFILE = 'PROFILE',
   APTITUDE = 'APTITUDE',
   JOBS = 'JOBS',
-  SETTINGS = 'SETTINGS'
+  SETTINGS = 'SETTINGS',
+  DOCUMATE = 'DOCUMATE'
+}
+
+// Documate Types
+export interface DocumateMessage {
+  id: string;
+  role: 'user' | 'model';
+  content: string;
+  timestamp: number;
+}
+
+export interface DocumateChatState {
+  messages: DocumateMessage[];
+  isLoading: boolean;
+  error: string | null;
+}
+
+export interface DocumatePage {
+  id: string;
+  title: string;
+  content: string;
+  lastModified: number;
 }
 
 export interface VisualizerStep {
