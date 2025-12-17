@@ -13,13 +13,12 @@ import { Profile } from './views/Profile';
 import { AptitudeTest } from './views/AptitudeTest';
 import { Jobs } from './views/Jobs';
 import { Settings } from './views/Settings';
-import { Documate } from './views/Documate';
 import { Blackhole } from './components/Blackhole';
 import { GameMode } from './types';
 import { MessageSquare } from 'lucide-react';
 
 function App() {
-  const [mode, setMode] = useState<GameMode>(GameMode.DOCUMATE);
+  const [mode, setMode] = useState<GameMode>(GameMode.HOME);
   const [isChatOpen, setIsChatOpen] = useState(false);
 
   // Wrapper to switch mode
@@ -58,8 +57,6 @@ function App() {
         return <Jobs />;
       case GameMode.SETTINGS:
         return <Settings />;
-      case GameMode.DOCUMATE:
-        return <Documate />;
       default:
         return <Landing setMode={handleSetMode} />;
     }

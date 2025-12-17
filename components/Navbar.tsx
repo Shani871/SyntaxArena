@@ -1,6 +1,6 @@
 import React from 'react';
 import { GameMode } from '../types';
-import { Sword, BookOpen, Settings, User, BarChart2, LayoutDashboard, Share2, FileText, GraduationCap, Terminal, BrainCircuit, Briefcase, Code, PenTool } from 'lucide-react';
+import { Sword, BookOpen, Settings, User, BarChart2, LayoutDashboard, Share2, FileText, GraduationCap, Terminal, BrainCircuit, Briefcase, Code } from 'lucide-react';
 
 interface NavbarProps {
   currentMode: GameMode;
@@ -19,7 +19,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentMode, setMode }) => {
     { mode: GameMode.PLAYGROUND, icon: <Share2 size={24} />, label: "Playground" },
     { mode: GameMode.TUTORIALS, icon: <GraduationCap size={24} />, label: "Tutorials" },
     { mode: GameMode.DOCS, icon: <FileText size={24} />, label: "Docs" },
-    { mode: GameMode.DOCUMATE, icon: <PenTool size={24} />, label: "Documate" },
+
     { mode: GameMode.LEADERBOARD, icon: <BarChart2 size={24} />, label: "Leaderboard" },
     { mode: GameMode.PROFILE, icon: <User size={24} />, label: "Profile" },
     { mode: GameMode.SETTINGS, icon: <Settings size={24} />, label: "Settings" },
