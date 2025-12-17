@@ -7,24 +7,55 @@ public class QuestionResponse {
     private String description;
     private List<String> examples;
     private String starterCode;
+    private String testHarness;
 
-    public QuestionResponse(String title, String description, List<String> examples, String starterCode) {
+    public QuestionResponse(String title, String description, List<String> examples, String starterCode,
+            String testHarness) {
         this.title = title;
         this.description = description;
         this.examples = examples;
         this.starterCode = starterCode;
+        this.testHarness = testHarness;
     }
 
     // Getters and Setters
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
+    public String getTitle() {
+        return title;
+    }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public void setTitle(String title) {
+        this.title = title;
+    }
 
-    public List<String> getExamples() { return examples; }
-    public void setExamples(List<String> examples) { this.examples = examples; }
+    public String getDescription() {
+        return description;
+    }
 
-    public String getStarterCode() { return starterCode; }
-    public void setStarterCode(String starterCode) { this.starterCode = starterCode; }
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public List<String> getExamples() {
+        return examples;
+    }
+
+    public void setExamples(List<String> examples) {
+        this.examples = examples;
+    }
+
+    public String getStarterCode() {
+        return starterCode;
+    }
+
+    public void setStarterCode(String starterCode) {
+        this.starterCode = starterCode;
+    }
+
+    public String getTestHarness() {
+        return testHarness;
+    }
+
+    public void setTestHarness(String testHarness) {
+        this.testHarness = testHarness;
+    }
 }

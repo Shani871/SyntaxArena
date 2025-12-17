@@ -101,7 +101,8 @@ export const BattleArena: React.FC<BattleArenaProps> = ({ mode = GameMode.BATTLE
                 baseDescription: backendQuestion.description,
                 difficulty: difficulty,
                 topic: "Generated",
-                initialCode: backendQuestion.starterCode
+                initialCode: backendQuestion.starterCode,
+                testHarness: backendQuestion.testHarness // Store harness
             } as Problem);
             setCode(backendQuestion.starterCode || "// Write your code here");
         } else {
@@ -228,29 +229,62 @@ export const BattleArena: React.FC<BattleArenaProps> = ({ mode = GameMode.BATTLE
         }
     };
 
+
+    // File Extension helper
+    const getFileExtension = () => {
+        switch (selectedLanguage) {
+            case 'python': return '.py';
+            case 'javascript': return '.js';
+            case 'java': default: return '.java';
+        }
+    };
+
+    const getFileName = () => {
+        switch (selectedLanguage) {
+            case 'python': return 'solution.py';
+            case 'javascript': return 'solution.js';
+            case 'java': default: return 'Solution.java';
+        }
+    };
+
     const handleSubmit = async () => {
         setIsLoading(true);
         setMessages(prev => [...prev, { role: 'user', text: ">> RUNNING CODE..." }]);
 
-        // Execute via Backend
-        const result = await apiService.executeCode(selectedLanguage, code);
+        // Execute via Backend with Test Harness
+        // Problem might be generic or generated, check if it has a harness
+        let harness = (problem as any).testHarness;
+
+        const result = await apiService.executeCode(selectedLanguage, code, harness);
 
         setIsLoading(false);
         setIsConsoleOpen(true);
-        setActiveBottomTab('CONSOLE');
 
-        if (result.error) {
+        // Check output for "Test Passed" / "Test Failed" to update Tests tab
+        if (result.output) {
+            const lines = result.output.split('\n');
+            const results = lines
+                .filter(l => l.includes("Test Passed") || l.includes("Test Failed"))
+                .map((l, idx) => ({
+                    id: idx + 1,
+                    input: "Hidden Test Case " + (idx + 1),
+                    expected: "Pass",
+                    actual: l.includes("Passed") ? "Pass" : "Fail",
+                    passed: l.includes("Test Passed")
+                }));
+
+            if (results.length > 0) {
+                setTestResults(results);
+                setActiveBottomTab('TESTS'); // Switch to tests if we have results
+                setMessages(prev => [...prev, { role: 'model', text: `>> TESTS COMPLETED: ${results.filter(r => r.passed).length}/${results.length} PASSED` }]);
+            } else {
+                setActiveBottomTab('CONSOLE'); // Default to console calls
+                setMessages(prev => [...prev, { role: 'model', text: `>> OUTPUT:\n${result.output}` }]);
+            }
+        } else if (result.error) {
+            setActiveBottomTab('CONSOLE');
             setMessages(prev => [...prev, { role: 'model', text: `>> ERROR:\n${result.error}` }]);
-        } else {
-            setMessages(prev => [...prev, { role: 'model', text: `>> OUTPUT:\n${result.output}` }]);
         }
-
-        // Still mock the "Test Results" tab for visual completeness until backend supports test runner
-        // logic...
-        /*
-        const success = Math.random() > 0.3; 
-        // ... existing test logic ...
-        */
     };
 
     const toggleConsole = () => {
@@ -532,7 +566,23 @@ export const BattleArena: React.FC<BattleArenaProps> = ({ mode = GameMode.BATTLE
 
                     {/* Editor - Flexible Height */}
                     <div className="flex-1 flex flex-col min-h-0 border-b border-[#27272a] relative">
-                        <CodeEditor code={code} setCode={setCode} preventPaste={true} />
+                        {/* File Tab */}
+                        <div className="flex items-center bg-[#18181b] border-b border-[#27272a]">
+                            <div className="px-4 py-2 text-xs font-mono text-[#ccc] bg-[#1e1e1e] border-r border-[#27272a] flex items-center gap-2">
+                                <span className={
+                                    selectedLanguage === 'javascript' ? 'text-yellow-400' :
+                                        selectedLanguage === 'python' ? 'text-blue-400' :
+                                            'text-red-400'
+                                }>{selectedLanguage === 'java' ? '☕' : selectedLanguage === 'python' ? '🐍' : 'JS'}</span>
+                                {getFileName()}
+                            </div>
+                        </div>
+                        <CodeEditor
+                            code={code}
+                            setCode={setCode}
+                            preventPaste={true}
+                            language={selectedLanguage}
+                        />
                     </div>
 
                     {/* Bottom Panel - Fixed Height when open */}

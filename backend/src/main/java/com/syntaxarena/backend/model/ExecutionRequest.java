@@ -3,6 +3,7 @@ package com.syntaxarena.backend.model;
 public class ExecutionRequest {
     private String language;
     private String code;
+    private String testHarness; // Optional test harness code to run
 
     public String getLanguage() {
         return language;
@@ -18,5 +19,13 @@ public class ExecutionRequest {
 
     public void setCode(String code) {
         this.code = code;
+    }
+
+    public String getTestHarness() {
+        return testHarness;
+    }
+
+    public void setTestHarness(String testHarness) {
+        this.testHarness = testHarness;
     }
 }

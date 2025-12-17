@@ -8,19 +8,20 @@ export interface QuestionResult {
     description: string;
     examples: string[];
     starterCode: string;
+    testHarness?: string; // Optional test harness code
 }
 
 const API_BASE_URL = '/api'; // Will be proxied by Vite
 
 export const apiService = {
-    executeCode: async (language: string, code: string): Promise<ExecutionResult> => {
+    executeCode: async (language: string, code: string, testHarness?: string): Promise<ExecutionResult> => {
         try {
             const response = await fetch(`${API_BASE_URL}/execute`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ language, code }),
+                body: JSON.stringify({ language, code, testHarness }),
             });
 
             if (!response.ok) {

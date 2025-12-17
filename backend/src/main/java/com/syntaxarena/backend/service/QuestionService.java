@@ -72,21 +72,54 @@ public class QuestionService {
                         "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.",
                         List.of("Input: nums = [2,7,11,15], target = 9 -> Output: [0,1]",
                                 "Input: nums = [3,2,4], target = 6 -> Output: [1,2]"),
-                        "public class Solution {\n    public int[] twoSum(int[] nums, int target) {\n        // Write your code here\n        return new int[]{};\n    }\n}");
+                        "public class Solution {\n    public int[] twoSum(int[] nums, int target) {\n        // Write your code here\n        return new int[]{};\n    }\n}",
+                        // Test Harness for Two Sum
+                        "import java.util.Arrays;\n" +
+                                "public class Main {\n" +
+                                "    public static void main(String[] args) {\n" +
+                                "        Solution sol = new Solution();\n" +
+                                "        boolean pass = true;\n" +
+                                "        if (!Arrays.equals(sol.twoSum(new int[]{2,7,11,15}, 9), new int[]{0,1})) pass = false;\n"
+                                +
+                                "        if (!Arrays.equals(sol.twoSum(new int[]{3,2,4}, 6), new int[]{1,2})) pass = false;\n"
+                                +
+                                "        System.out.println(pass ? \"Test Passed\" : \"Test Failed\");\n" +
+                                "    }\n" +
+                                "}");
             case "hard":
                 return new QuestionResponse(
                         "Trapping Rain Water",
                         "Given n non-negative integers representing an elevation map where the width of each bar is 1, compute how much water it can trap after raining.",
                         List.of("Input: height = [0,1,0,2,1,0,1,3,2,1,2,1] -> Output: 6",
                                 "Input: height = [4,2,0,3,2,5] -> Output: 9"),
-                        "public class Solution {\n    public int trap(int[] height) {\n        // Write your code here\n        return 0;\n    }\n}");
+                        "public class Solution {\n    public int trap(int[] height) {\n        // Write your code here\n        return 0;\n    }\n}",
+                        // Test Harness for Trap Rain Water
+                        "public class Main {\n" +
+                                "    public static void main(String[] args) {\n" +
+                                "        Solution sol = new Solution();\n" +
+                                "        boolean pass = true;\n" +
+                                "        if (sol.trap(new int[]{0,1,0,2,1,0,1,3,2,1,2,1}) != 6) pass = false;\n" +
+                                "        if (sol.trap(new int[]{4,2,0,3,2,5}) != 9) pass = false;\n" +
+                                "        System.out.println(pass ? \"Test Passed\" : \"Test Failed\");\n" +
+                                "    }\n" +
+                                "}");
             case "medium":
             default:
                 return new QuestionResponse(
                         "Longest Substring Without Repeating Characters",
                         "Given a string s, find the length of the longest substring without repeating characters.",
                         List.of("Input: s = \"abcabcbb\" -> Output: 3", "Input: s = \"bbbbb\" -> Output: 1"),
-                        "public class Solution {\n    public int lengthOfLongestSubstring(String s) {\n        // Write your code here\n        return 0;\n    }\n}");
+                        "public class Solution {\n    public int lengthOfLongestSubstring(String s) {\n        // Write your code here\n        return 0;\n    }\n}",
+                        // Test Harness for Longest Substring
+                        "public class Main {\n" +
+                                "    public static void main(String[] args) {\n" +
+                                "        Solution sol = new Solution();\n" +
+                                "        boolean pass = true;\n" +
+                                "        if (sol.lengthOfLongestSubstring(\"abcabcbb\") != 3) pass = false;\n" +
+                                "        if (sol.lengthOfLongestSubstring(\"bbbbb\") != 1) pass = false;\n" +
+                                "        System.out.println(pass ? \"Test Passed\" : \"Test Failed\");\n" +
+                                "    }\n" +
+                                "}");
         }
     }
 
@@ -108,6 +141,8 @@ public class QuestionService {
         return input.replace("\"", "\\\"").replace("\n", " ");
     }
 
+    // Helper for parsing JSON from Gemini which might not have test harness yet
+    // For now we will just pass null or empty string for dynamic ones
     private QuestionResponse parseResponse(String jsonResponse) {
         try {
             JsonNode root = objectMapper.readTree(jsonResponse);
@@ -142,10 +177,11 @@ public class QuestionService {
                 }
             }
 
-            return new QuestionResponse(title, description, examples, starterCode);
+            // Dynamic questions don't have harness yet, pass null/empty
+            return new QuestionResponse(title, description, examples, starterCode, "");
 
         } catch (Exception e) {
-            return new QuestionResponse("Error Parsing", "Raw response: " + jsonResponse, List.of(), "");
+            return new QuestionResponse("Error Parsing", "Raw response: " + jsonResponse, List.of(), "", "");
         }
     }
 }
