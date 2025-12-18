@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Wifi, Users, Zap, Trophy, Target, ChevronRight, X, Swords, Clock, Cpu } from 'lucide-react';
+import { Wifi, Users, Zap, Trophy, Target, ChevronRight, X, Swords, Clock, Cpu, Shield } from 'lucide-react';
 import { useArenaWebSocket, ArenaMessage } from '../hooks/useArenaWebSocket';
+import { useProctoring } from '../hooks/useProctoring';
+import { ProctoringSetup } from '../components/ProctoringSetup';
+import { ProctoringCamera } from '../components/ProctoringCamera';
 import { MOCK_USER } from '../constants';
 import { GameMode } from '../types';
 
@@ -27,6 +30,21 @@ export const ArenaLobby: React.FC<ArenaLobbyProps> = ({ setMode, onMatchFound })
     const [opponent, setOpponent] = useState<{ username: string; rating: number } | null>(null);
     const [searchTime, setSearchTime] = useState(0);
     const [queuePosition, setQueuePosition] = useState<number | null>(null);
+
+    // Proctoring State
+    const [showProctoringSetup, setShowProctoringSetup] = useState(true);
+    const [proctoringEnabled, setProctoringEnabled] = useState(false);
+
+    const proctoring = useProctoring({
+        onViolation: (count, reason) => {
+            console.warn(`Proctoring violation ${count}/4: ${reason}`);
+        },
+        onDisqualified: () => {
+            // Exit arena on disqualification
+            setMode(GameMode.DASHBOARD);
+        },
+        maxViolations: 4,
+    });
 
     const playerId = MOCK_USER.id || 'player_' + Math.random().toString(36).substr(2, 9);
 
@@ -163,8 +181,8 @@ export const ArenaLobby: React.FC<ArenaLobbyProps> = ({ setMode, onMatchFound })
                         <p className="text-gray-500 text-sm uppercase tracking-wider mb-2">Challenge</p>
                         <h4 className="text-xl font-bold text-white">{matchSession.problemTitle}</h4>
                         <span className={`text-xs font-bold px-3 py-1 rounded-full ${matchSession.difficulty === 'Easy' ? 'bg-green-500/20 text-green-400' :
-                                matchSession.difficulty === 'Medium' ? 'bg-yellow-500/20 text-yellow-400' :
-                                    'bg-red-500/20 text-red-400'
+                            matchSession.difficulty === 'Medium' ? 'bg-yellow-500/20 text-yellow-400' :
+                                'bg-red-500/20 text-red-400'
                             }`}>
                             {matchSession.difficulty}
                         </span>
@@ -310,4 +328,84 @@ export const ArenaLobby: React.FC<ArenaLobbyProps> = ({ setMode, onMatchFound })
             </div>
         </div>
     );
+
+    // Show proctoring setup before allowing access to lobby
+    if (showProctoringSetup) {
+        return (
+            <>
+                <ProctoringSetup
+                    onReady={() => {
+                        setShowProctoringSetup(false);
+                        setProctoringEnabled(true);
+                    }}
+                    onCancel={() => {
+                        // Exit to dashboard - cannot bypass proctoring
+                        setMode(GameMode.DASHBOARD);
+                    }}
+                    onVideoRef={proctoring.attachVideoStream}
+                    startProctoring={proctoring.startProctoring}
+                    hasPermission={proctoring.hasPermission}
+                    faceCount={proctoring.faceCount}
+                    status={proctoring.status}
+                    errorMessage={proctoring.errorMessage}
+                />
+                {/* Proctoring Camera (when active) */}
+                {proctoringEnabled && proctoring.isEnabled && (
+                    <ProctoringCamera
+                        faceCount={proctoring.faceCount}
+                        violations={proctoring.violations}
+                        maxViolations={proctoring.maxViolations}
+                        status={proctoring.status}
+                        onVideoRef={proctoring.attachVideoStream}
+                    />
+                )}
+            </>
+        );
+    }
+
+    // Render with proctoring camera overlay
+    return (
+        <>
+            {/* Main Arena Lobby Content */}
+            {renderLobbyContent()}
+
+            {/* Proctoring Camera (when active) */}
+            {proctoringEnabled && proctoring.isEnabled && (
+                <ProctoringCamera
+                    faceCount={proctoring.faceCount}
+                    violations={proctoring.violations}
+                    maxViolations={proctoring.maxViolations}
+                    status={proctoring.status}
+                    onVideoRef={proctoring.attachVideoStream}
+                />
+            )}
+        </>
+    );
+
+    function renderLobbyContent() {
+        // Render Match Found (VS Screen)
+        if (lobbyState === 'FOUND' && opponent) {
+            return (
+                <div className="h-full w-full flex flex-col items-center justify-center bg-[#050505] text-white font-mono relative overflow-hidden">
+                    {/* ... rest of VS screen code ... */}
+                </div>
+            );
+        }
+
+        // Render Searching State
+        if (lobbyState === 'SEARCHING') {
+            return (
+                <div className="h-full w-full flex flex-col items-center justify-center bg-[#0a0a0b] text-white font-mono relative overflow-hidden">
+                    {/* ... rest of searching code ... */}
+                </div>
+            );
+        }
+
+        // Render Idle State (Lobby)
+        return (
+            <div className="h-full w-full flex flex-col bg-[#0a0a0b] text-white overflow-y-auto">
+                {/* ... rest of lobby code ... */}
+            </div>
+        );
+    }
 };

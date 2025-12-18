@@ -16,6 +16,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentMode, setMode }) => {
     { mode: GameMode.BATTLE, icon: <Sword size={24} />, label: "Battle" },
     { mode: GameMode.APTITUDE, icon: <BrainCircuit size={24} />, label: "Aptitude" },
     { mode: GameMode.JOBS, icon: <Briefcase size={24} />, label: "Jobs" },
+    { mode: GameMode.RESUME_BUILDER, icon: <FileText size={24} />, label: "Resume" },
     { mode: GameMode.VISUALIZER, icon: <BookOpen size={24} />, label: "Visualizer" },
     { mode: GameMode.PLAYGROUND, icon: <Share2 size={24} />, label: "Playground" },
     { mode: GameMode.TUTORIALS, icon: <GraduationCap size={24} />, label: "Tutorials" },
@@ -52,8 +53,8 @@ export const Navbar: React.FC<NavbarProps> = ({ currentMode, setMode }) => {
             onClick={() => setMode(item.mode)}
             title={item.label}
             className={`group relative flex items-center justify-center p-3 md:py-4 min-w-[3rem] md:w-auto transition-all shrink-0 ${currentMode === item.mode
-                ? 'text-white'
-                : 'text-[#555] hover:text-white hover:bg-white/5'
+              ? 'text-white'
+              : 'text-[#555] hover:text-white hover:bg-white/5'
               }`}
           >
             {/* Active Indicator */}

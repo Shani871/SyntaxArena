@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Send, AlertTriangle, Flag, CheckCircle2, ChevronDown, ChevronUp, Terminal as TerminalIcon, FileText, Lightbulb, XCircle, Wifi, Zap, Timer, Code2, ChevronRight, User, RefreshCw, Target, BarChart2, Settings, Swords, Cpu, Trophy, Clock, Upload } from 'lucide-react';
+import { Play, Send, AlertTriangle, Flag, CheckCircle2, ChevronDown, ChevronUp, Terminal as TerminalIcon, FileText, Lightbulb, XCircle, Wifi, Zap, Timer, Code2, ChevronRight, User, RefreshCw, Target, BarChart2, Settings, Swords, Cpu, Trophy, Clock, Upload, Shield } from 'lucide-react';
 import { Problem, BattleState, ChatMessage, GameMode } from '../types';
 import { SAMPLE_PROBLEMS, MOCK_USER } from '../constants';
 import { CodeEditor } from '../components/CodeEditor';
 import { generateProblemVariant, getInvigilatorHint } from '../services/geminiService';
 import { apiService, ValidationResult } from '../services/apiService';
+import { useProctoring } from '../hooks/useProctoring';
+import { ProctoringCamera } from '../components/ProctoringCamera';
+import { ProctoringSetup } from '../components/ProctoringSetup';
 
 interface BattleArenaProps {
     mode?: GameMode;
@@ -53,6 +56,24 @@ export const BattleArena: React.FC<BattleArenaProps> = ({ mode = GameMode.BATTLE
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [inputMessage, setInputMessage] = useState("");
     const chatEndRef = useRef<HTMLDivElement>(null);
+
+    // Proctoring State
+    const [showProctoringSetup, setShowProctoringSetup] = useState(mode === GameMode.BATTLE || mode === GameMode.ASSESSMENT);
+    const [proctoringEnabled, setProctoringEnabled] = useState(false);
+
+    const proctoring = useProctoring({
+        onViolation: (count, reason) => {
+            setMessages(prev => [...prev, {
+                role: 'model',
+                text: `⚠️ PROCTORING VIOLATION (${count}/4): ${reason === 'NO_FACE' ? 'No face detected' : 'Multiple faces detected'}. Please ensure only you are visible.`
+            }]);
+        },
+        onDisqualified: () => {
+            setShowResultModal('DISQUALIFIED' as any);
+            setBattle(prev => ({ ...prev, isActive: false }));
+        },
+        maxViolations: 4,
+    });
 
     // Initialize Practice or Matchmaking Sequence
     useEffect(() => {
@@ -736,10 +757,10 @@ export const BattleArena: React.FC<BattleArenaProps> = ({ mode = GameMode.BATTLE
             {showResultModal && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md">
                     <div className={`relative p-8 rounded-2xl shadow-2xl max-w-md w-full text-center animate-fade-in ${showResultModal === 'WIN'
-                            ? 'bg-gradient-to-br from-[#1a1a2e] to-[#0f3d0f] border border-green-500/30'
-                            : showResultModal === 'TIMEOUT'
-                                ? 'bg-gradient-to-br from-[#1a1a2e] to-[#3d2e0f] border border-yellow-500/30'
-                                : 'bg-gradient-to-br from-[#1a1a2e] to-[#3d0f0f] border border-red-500/30'
+                        ? 'bg-gradient-to-br from-[#1a1a2e] to-[#0f3d0f] border border-green-500/30'
+                        : showResultModal === 'TIMEOUT'
+                            ? 'bg-gradient-to-br from-[#1a1a2e] to-[#3d2e0f] border border-yellow-500/30'
+                            : 'bg-gradient-to-br from-[#1a1a2e] to-[#3d0f0f] border border-red-500/30'
                         }`}>
                         {/* Glow effect */}
                         <div className={`absolute inset-0 rounded-2xl opacity-20 blur-xl ${showResultModal === 'WIN' ? 'bg-green-500' : showResultModal === 'TIMEOUT' ? 'bg-yellow-500' : 'bg-red-500'
@@ -748,10 +769,10 @@ export const BattleArena: React.FC<BattleArenaProps> = ({ mode = GameMode.BATTLE
                         <div className="relative z-10">
                             {/* Icon */}
                             <div className={`w-24 h-24 mx-auto mb-6 rounded-full flex items-center justify-center ${showResultModal === 'WIN'
-                                    ? 'bg-green-500/20 shadow-[0_0_30px_rgba(34,197,94,0.5)]'
-                                    : showResultModal === 'TIMEOUT'
-                                        ? 'bg-yellow-500/20 shadow-[0_0_30px_rgba(234,179,8,0.5)]'
-                                        : 'bg-red-500/20 shadow-[0_0_30px_rgba(239,68,68,0.5)]'
+                                ? 'bg-green-500/20 shadow-[0_0_30px_rgba(34,197,94,0.5)]'
+                                : showResultModal === 'TIMEOUT'
+                                    ? 'bg-yellow-500/20 shadow-[0_0_30px_rgba(234,179,8,0.5)]'
+                                    : 'bg-red-500/20 shadow-[0_0_30px_rgba(239,68,68,0.5)]'
                                 }`}>
                                 {showResultModal === 'WIN' && <Trophy size={48} className="text-green-400" />}
                                 {showResultModal === 'TIMEOUT' && <Clock size={48} className="text-yellow-400" />}
@@ -820,6 +841,90 @@ export const BattleArena: React.FC<BattleArenaProps> = ({ mode = GameMode.BATTLE
                                     </button>
                                 )}
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Proctoring Setup Modal - MANDATORY for Battle/Arena */}
+            {showProctoringSetup && (mode === GameMode.BATTLE || mode === GameMode.ASSESSMENT) && (
+                <ProctoringSetup
+                    onReady={() => {
+                        setShowProctoringSetup(false);
+                        setProctoringEnabled(true);
+                    }}
+                    onCancel={() => {
+                        // Redirect back to home - cannot bypass proctoring
+                        window.location.href = '/';
+                    }}
+                    onVideoRef={proctoring.attachVideoStream}
+                    startProctoring={proctoring.startProctoring}
+                    hasPermission={proctoring.hasPermission}
+                    faceCount={proctoring.faceCount}
+                    status={proctoring.status}
+                    errorMessage={proctoring.errorMessage}
+                />
+            )}
+
+            {/* Block battle UI if proctoring not enabled for Battle/Arena modes */}
+            {(mode === GameMode.BATTLE || mode === GameMode.ASSESSMENT) && !proctoringEnabled && (
+                <div className="fixed inset-0 z-50 bg-black flex items-center justify-center">
+                    <div className="text-center">
+                        <Shield size={64} className="text-gray-600 mx-auto mb-4" />
+                        <p className="text-gray-400 text-lg">Waiting for proctoring setup...</p>
+                    </div>
+                </div>
+            )}
+
+            {/* Proctoring Camera (when active) */}
+            {proctoringEnabled && proctoring.isEnabled && !showProctoringSetup && (
+                <ProctoringCamera
+                    faceCount={proctoring.faceCount}
+                    violations={proctoring.violations}
+                    maxViolations={proctoring.maxViolations}
+                    status={proctoring.status}
+                    onVideoRef={proctoring.attachVideoStream}
+                />
+            )}
+
+            {/* Disqualified Modal */}
+            {(showResultModal as string) === 'DISQUALIFIED' && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md">
+                    <div className="relative p-8 rounded-2xl shadow-2xl max-w-md w-full text-center bg-gradient-to-br from-[#1a1a2e] to-[#3d0f0f] border border-red-500/30">
+                        <div className="absolute inset-0 rounded-2xl opacity-20 blur-xl bg-red-500"></div>
+
+                        <div className="relative z-10">
+                            <div className="w-24 h-24 mx-auto mb-6 rounded-full flex items-center justify-center bg-red-500/20 shadow-[0_0_30px_rgba(239,68,68,0.5)]">
+                                <Shield size={48} className="text-red-400" />
+                            </div>
+
+                            <h2 className="text-3xl font-black mb-2 text-red-400">DISQUALIFIED</h2>
+
+                            <p className="text-gray-400 mb-6">
+                                You have been disqualified due to multiple proctoring violations.
+                            </p>
+
+                            <div className="bg-[#1e1e1e] rounded-lg p-4 mb-6 text-left">
+                                <p className="text-sm text-gray-400">
+                                    <span className="text-red-400 font-bold">Violations:</span> {proctoring.violations}/{proctoring.maxViolations}
+                                </p>
+                                <p className="text-sm text-gray-500 mt-2">
+                                    • This battle will not count<br />
+                                    • No XP will be awarded<br />
+                                    • Rating unaffected
+                                </p>
+                            </div>
+
+                            <button
+                                onClick={() => {
+                                    setShowResultModal(null);
+                                    proctoring.stopProctoring();
+                                    setProctoringEnabled(false);
+                                }}
+                                className="px-8 py-3 bg-[#27272a] hover:bg-[#333] text-white text-sm font-bold rounded-xl transition-colors"
+                            >
+                                Return to Home
+                            </button>
                         </div>
                     </div>
                 </div>

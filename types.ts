@@ -54,7 +54,8 @@ export enum GameMode {
   PROFILE = 'PROFILE',
   APTITUDE = 'APTITUDE',
   JOBS = 'JOBS',
-  SETTINGS = 'SETTINGS'
+  SETTINGS = 'SETTINGS',
+  RESUME_BUILDER = 'RESUME_BUILDER'
 }
 
 export interface VisualizerStep {

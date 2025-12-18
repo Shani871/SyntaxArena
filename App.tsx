@@ -14,6 +14,7 @@ import { AptitudeTest } from './views/AptitudeTest';
 import { Jobs } from './views/Jobs';
 import { Settings } from './views/Settings';
 import { ArenaLobby } from './views/ArenaLobby';
+import { ResumeBuilder } from './views/ResumeBuilder';
 import { Blackhole } from './components/Blackhole';
 import { GameMode } from './types';
 import { MessageSquare } from 'lucide-react';
@@ -34,7 +35,7 @@ function App() {
       case GameMode.HOME:
         return <Landing setMode={handleSetMode} />;
       case GameMode.DASHBOARD:
-        return <Dashboard />;
+        return <Dashboard setMode={handleSetMode} />;
       case GameMode.BATTLE:
       case GameMode.ASSESSMENT:
         return <BattleArena key={mode} mode={mode} />;
@@ -60,6 +61,8 @@ function App() {
         return <Jobs />;
       case GameMode.SETTINGS:
         return <Settings />;
+      case GameMode.RESUME_BUILDER:
+        return <ResumeBuilder setMode={handleSetMode} />;
       default:
         return <Landing setMode={handleSetMode} />;
     }

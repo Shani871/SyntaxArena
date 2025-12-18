@@ -29,6 +29,7 @@
 /Users/prabhuchaturevedi/Desktop/SyntaxArena/backend/src/main/java/com/syntaxarena/backend/model/AptitudeRequest.java
 /Users/prabhuchaturevedi/Desktop/SyntaxArena/backend/src/main/java/com/syntaxarena/backend/config/WebSocketConfig.java
 /Users/prabhuchaturevedi/Desktop/SyntaxArena/backend/src/main/java/com/syntaxarena/backend/model/ArenaSession.java
+/Users/prabhuchaturevedi/Desktop/SyntaxArena/backend/src/main/java/com/syntaxarena/backend/controller/ResumeController.java
 /Users/prabhuchaturevedi/Desktop/SyntaxArena/backend/src/main/java/com/syntaxarena/backend/service/QuestionService.java
 /Users/prabhuchaturevedi/Desktop/SyntaxArena/backend/src/main/java/com/syntaxarena/backend/service/NvidiaVisualizerService.java
 /Users/prabhuchaturevedi/Desktop/SyntaxArena/backend/src/main/java/com/syntaxarena/backend/controller/ExecutionController.java
@@ -36,6 +37,7 @@
 /Users/prabhuchaturevedi/Desktop/SyntaxArena/backend/src/main/java/com/syntaxarena/backend/model/ExecutionResponse.java
 /Users/prabhuchaturevedi/Desktop/SyntaxArena/backend/src/main/java/com/syntaxarena/backend/model/ArenaMessage.java
 /Users/prabhuchaturevedi/Desktop/SyntaxArena/backend/src/main/java/com/syntaxarena/backend/model/TestValidationRequest.java
+/Users/prabhuchaturevedi/Desktop/SyntaxArena/backend/src/main/java/com/syntaxarena/backend/service/ResumeParserService.java
 /Users/prabhuchaturevedi/Desktop/SyntaxArena/backend/src/main/java/com/syntaxarena/backend/model/DocChatRequest.java
 /Users/prabhuchaturevedi/Desktop/SyntaxArena/backend/src/main/java/com/syntaxarena/backend/model/CodeStoryResponse.java
 /Users/prabhuchaturevedi/Desktop/SyntaxArena/backend/src/main/java/com/syntaxarena/backend/model/TestValidationResponse.java

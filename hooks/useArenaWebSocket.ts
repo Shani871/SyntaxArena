@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import SockJS from 'sockjs-client';
 import { Client, IMessage } from '@stomp/stompjs';
+import SockJS from 'sockjs-client/dist/sockjs';
 
 export interface ArenaMessage {
     type: 'JOIN_QUEUE' | 'LEAVE_QUEUE' | 'MATCH_FOUND' | 'BATTLE_START' | 'PROGRESS_UPDATE' | 'OPPONENT_PROGRESS' | 'SUBMIT_SOLUTION' | 'GAME_END' | 'ERROR';
