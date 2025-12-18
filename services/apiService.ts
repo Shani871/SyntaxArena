@@ -21,6 +21,22 @@ export interface AptitudeResult {
     questions: AptitudeQuestion[];
 }
 
+export interface TestResult {
+    testNumber: number;
+    input: string;
+    expected: string;
+    actual: string;
+    passed: boolean;
+}
+
+export interface ValidationResult {
+    allPassed: boolean;
+    passedCount: number;
+    totalCount: number;
+    results: TestResult[];
+    feedback: string;
+}
+
 const API_BASE_URL = '/api'; // Will be proxied by Vite
 
 export const apiService = {
@@ -156,6 +172,38 @@ export const apiService = {
             return result.explanation;
         } catch (error) {
             console.error("Concept simplification error", error);
+            return null;
+        }
+    },
+
+    validateSolution: async (
+        code: string,
+        language: string,
+        problemDescription: string,
+        expectedBehavior?: string
+    ): Promise<ValidationResult | null> => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/validate-solution`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    code,
+                    language,
+                    problemDescription,
+                    expectedBehavior: expectedBehavior || 'Solve the problem as described'
+                }),
+            });
+
+            if (!response.ok) {
+                console.error("Solution validation failed", response.statusText);
+                return null;
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error("Solution validation error", error);
             return null;
         }
     }
