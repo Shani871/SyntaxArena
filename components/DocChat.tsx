@@ -1,16 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Sparkles, X, Loader2, Bot } from 'lucide-react';
+import { Send, Sparkles, X, Loader2, Bot, FileText } from 'lucide-react';
 import { chatWithDocument } from '../services/geminiService';
 import { ChatMessage } from '../types';
 
 interface DocChatProps {
     documentContent: string;
     onClose: () => void;
+    onCreateDocument?: (title: string, category: string, content: string) => void;
 }
 
-export const DocChat: React.FC<DocChatProps> = ({ documentContent, onClose }) => {
+export const DocChat: React.FC<DocChatProps> = ({ documentContent, onClose, onCreateDocument }) => {
     const [messages, setMessages] = useState<ChatMessage[]>([
-        { role: 'model', text: 'Hello! I have read this document. Ask me anything about it.' }
+        { role: 'model', text: 'Hello! I can help you with this document or create new ones. Try saying "Create a document about [topic]"' }
     ]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -28,9 +29,40 @@ export const DocChat: React.FC<DocChatProps> = ({ documentContent, onClose }) =>
         setInput('');
         setIsLoading(true);
 
-        const responseText = await chatWithDocument(messages, documentContent, input);
+        try {
+            const response = await fetch('http://localhost:8080/api/doc-chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    documentContent,
+                    message: input,
+                    history: messages,
+                }),
+            });
 
-        setMessages(prev => [...prev, { role: 'model', text: responseText }]);
+            if (!response.ok) {
+                throw new Error(`Backend error: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            // Check if this is a document creation response
+            if (data.action === 'CREATE_DOC' && onCreateDocument) {
+                onCreateDocument(data.title, data.category, data.content);
+                setMessages(prev => [...prev, {
+                    role: 'model',
+                    text: `✅ Document "${data.title}" has been created and added to your documentation!\n\nCategory: ${data.category}`
+                }]);
+            } else {
+                setMessages(prev => [...prev, { role: 'model', text: data.response || "I could not generate a response." }]);
+            }
+        } catch (error: any) {
+            console.error("DocChat error", error);
+            setMessages(prev => [...prev, { role: 'model', text: `Error: ${error.message}` }]);
+        }
+
         setIsLoading(false);
     };
 
@@ -55,8 +87,8 @@ export const DocChat: React.FC<DocChatProps> = ({ documentContent, onClose }) =>
                     <div key={idx} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                         <div
                             className={`max-w-[90%] px-3 py-2 rounded-lg text-xs leading-relaxed ${msg.role === 'user'
-                                    ? 'bg-cyber-blue/20 text-white'
-                                    : 'bg-[#2d2d2d] text-[#d4d4d4]'
+                                ? 'bg-cyber-blue/20 text-white'
+                                : 'bg-[#2d2d2d] text-[#d4d4d4]'
                                 }`}
                         >
                             {msg.text}
@@ -79,7 +111,7 @@ export const DocChat: React.FC<DocChatProps> = ({ documentContent, onClose }) =>
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                        placeholder="Ask about this doc..."
+                        placeholder="Ask or say 'Create a doc about...'"
                         className="flex-1 bg-[#1e1e1e] border border-[#333] rounded px-3 py-1.5 text-white text-xs focus:border-cyber-blue outline-none"
                     />
                     <button
