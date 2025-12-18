@@ -247,80 +247,56 @@ export const generateApiDiagram = async (code: string): Promise<string> => {
 };
 
 /**
- * BlackHole Chatbot Service
+ * BlackHole Chatbot Service via backend NVIDIA API
  */
 export const chatWithBlackhole = async (history: { role: string; text: string }[], message: string): Promise<string> => {
-  if (!process.env.API_KEY) return "The void is silent (Missing API Key).";
-
-  const systemInstruction = `
-    You are BlackHole, the resident AI system of SyntaxArena.
-    Your personality is highly intelligent, slightly cryptic, and tech-noir.
-    You assist users with coding challenges, explaining algorithms, or navigating the app.
-    Keep responses concise, precise, and helpful.
-    Occasionally use phrases like "Analyzing entropy...", "Void connection established...", "Querying the abyss...".
-  `;
-
-  const conversation = [
-    ...history.map(msg => ({
-      role: msg.role,
-      parts: [{ text: msg.text }]
-    })),
-    { role: 'user', parts: [{ text: message }] }
-  ];
-
   try {
-    const response = await ai.models.generateContent({
-      model: MODEL_FLASH,
-      contents: conversation as any,
-      config: {
-        systemInstruction: systemInstruction,
-      }
+    const response = await fetch('http://localhost:8080/api/blackhole', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message,
+        history,
+      }),
     });
-    return response.text || "The Void returned nothing.";
-  } catch (error) {
+
+    if (!response.ok) {
+      throw new Error(`Backend error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.response || ">> The Void returned nothing.";
+  } catch (error: any) {
     console.error("Blackhole error", error);
-    return "Entropy overwhelmed the connection.";
+    return ">> ERROR: Entropy overwhelmed the connection. " + error.message;
   }
 };
 
 /**
- * Chat with a specific document context.
+ * Chat with a specific document context via backend NVIDIA API.
  */
 export const chatWithDocument = async (history: { role: string; text: string }[], documentContent: string, message: string): Promise<string> => {
-  if (!process.env.API_KEY) return "Service unavailable (Missing API Key).";
-
-  const systemInstruction = `
-    You are an intelligent documentation assistant.
-    Your goal is to answer questions based strictly on the provided DOCUMENT_CONTEXT.
-    
-    DOCUMENT_CONTEXT:
-    """
-    ${documentContent}
-    """
-    
-    RULES:
-    1. Answer users' questions using the context above.
-    2. If the answer is not in the context, say "I cannot find that information in the current document."
-    3. Be concise and helpful.
-  `;
-
-  const conversation = [
-    ...history.map(msg => ({
-      role: msg.role,
-      parts: [{ text: msg.text }]
-    })),
-    { role: 'user', parts: [{ text: message }] }
-  ];
-
   try {
-    const response = await ai.models.generateContent({
-      model: MODEL_FLASH,
-      contents: conversation as any,
-      config: {
-        systemInstruction: systemInstruction,
-      }
+    const response = await fetch('http://localhost:8080/api/doc-chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        documentContent,
+        message,
+        history,
+      }),
     });
-    return response.text || "I could not generate a response.";
+
+    if (!response.ok) {
+      throw new Error(`Backend error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.response || "I could not generate a response.";
   } catch (error: any) {
     console.error("DocChat error", error);
     return `Error communicating with the assistant: ${error.message}`;
