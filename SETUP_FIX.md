@@ -26,6 +26,16 @@
 winget install -e --id Maven.Maven
 ```
 
+### 3. Google Cloud SDK (gcloud) Not Found
+**Error:** `'gcloud' is not recognized...`
+**Fix (Fastest):**
+Run this in an Admin PowerShell:
+```powershell
+winget install -e --id Google.CloudSDK
+```
+**Fix (Manual):**
+Download the [Google Cloud CLI Installer](https://dl.google.com/dl/cloudsdk/channels/rapid/GoogleCloudSDKInstaller.exe).
+
 ## Running the Project
 
 ### Frontend

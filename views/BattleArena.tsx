@@ -11,9 +11,10 @@ import { ProctoringSetup } from '../components/ProctoringSetup';
 
 interface BattleArenaProps {
     mode?: GameMode;
+    setMode?: (mode: GameMode) => void;
 }
 
-export const BattleArena: React.FC<BattleArenaProps> = ({ mode = GameMode.BATTLE }) => {
+export const BattleArena: React.FC<BattleArenaProps> = ({ mode = GameMode.BATTLE, setMode }) => {
     const [matchState, setMatchState] = useState<'SEARCHING' | 'FOUND' | 'BATTLE'>('SEARCHING');
     const [problem, setProblem] = useState<Problem>(SAMPLE_PROBLEMS[0]);
     const [code, setCode] = useState(`function solve(nums, target) {
@@ -70,7 +71,10 @@ export const BattleArena: React.FC<BattleArenaProps> = ({ mode = GameMode.BATTLE
             }]);
         },
         onDisqualified: () => {
-            setShowResultModal('DISQUALIFIED' as any);
+            // Redirect to home instead of showing modal
+            if (setMode) {
+                setMode(GameMode.HOME);
+            }
             setBattle(prev => ({ ...prev, isActive: false }));
         },
         maxViolations: 4,
@@ -602,7 +606,10 @@ export const BattleArena: React.FC<BattleArenaProps> = ({ mode = GameMode.BATTLE
                                         {(['Easy', 'Medium', 'Hard'] as const).map(diff => (
                                             <button
                                                 key={diff}
-                                                onClick={() => loadPracticeProblem(diff)}
+                                                onClick={() => {
+                                                    setPracticeDifficulty(diff);
+                                                    loadPracticeProblem(diff);
+                                                }}
                                                 className={`flex-1 py-2 text-xs font-bold rounded transition-all border ${practiceDifficulty === diff
                                                     ? 'bg-cyber-neon/10 text-cyber-neon border-cyber-neon'
                                                     : 'bg-[#252526] text-[#666] border-transparent hover:bg-[#333]'

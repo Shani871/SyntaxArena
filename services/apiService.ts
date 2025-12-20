@@ -37,7 +37,7 @@ export interface ValidationResult {
     feedback: string;
 }
 
-const API_BASE_URL = '/api'; // Will be proxied by Vite
+const API_BASE_URL = '/api';
 
 export const apiService = {
     executeCode: async (language: string, code: string): Promise<ExecutionResult> => {

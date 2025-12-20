@@ -62,28 +62,39 @@ export const Dashboard: React.FC<DashboardProps> = ({ setMode }) => {
     };
 
     return (
-        <div className="h-full w-full flex flex-col bg-[#1e1e1e] overflow-hidden font-mono text-sm">
+        <div className="h-full w-full flex flex-col bg-[#0a0a0b] overflow-hidden font-mono text-sm relative">
+            {/* Premium Background Elements */}
+            <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/5 rounded-full blur-[120px] animate-pulse"></div>
+                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/5 rounded-full blur-[120px] animate-pulse delay-1000"></div>
+                <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '32px 32px' }}></div>
+            </div>
+
             {/* Scrollable Content Container */}
-            <div className="flex-1 overflow-y-auto p-4 md:p-8 scrollbar-thin scrollbar-thumb-gray-700">
+            <div className="flex-1 overflow-y-auto p-4 md:p-8 scrollbar-thin scrollbar-thumb-white/10 relative z-10">
                 <div className="w-full max-w-7xl mx-auto flex flex-col gap-8 pb-24">
 
                     {/* Header */}
-                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-2">
+                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-4 border-b border-white/5 mx-1">
                         <div className="flex items-center gap-6">
                             <div className="relative group cursor-pointer">
-                                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-2xl font-bold text-white shadow-lg shadow-blue-900/20 group-hover:scale-105 transition-transform ring-4 ring-[#252526]">
+                                <div className="absolute inset-[-4px] bg-gradient-to-tr from-blue-500 to-purple-500 rounded-full opacity-20 group-hover:opacity-40 blur-sm transition-opacity"></div>
+                                <div className="relative w-16 h-16 rounded-full bg-[#161617] border border-white/10 flex items-center justify-center text-2xl font-black text-white shadow-2xl transition-all duration-500 group-hover:scale-105 group-hover:border-blue-500/50 overflow-hidden">
+                                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10"></div>
                                     {MOCK_USER.username.slice(0, 2).toUpperCase()}
                                 </div>
-                                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-4 border-[#1e1e1e] rounded-full animate-pulse"></div>
+                                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-4 border-[#0a0a0b] rounded-full shadow-[0_0_10px_#22c55e]"></div>
                             </div>
                             <div>
-                                <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-2">
-                                    Welcome back, {MOCK_USER.username} <Sparkles size={18} className="text-yellow-400 animate-pulse" />
+                                <h1 className="text-3xl font-black text-white tracking-tighter flex items-center gap-3">
+                                    Welcome back, <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">{MOCK_USER.username}</span> <Sparkles size={18} className="text-yellow-400 animate-pulse" />
                                 </h1>
-                                <div className="flex items-center gap-3 mt-1 text-[#858585]">
-                                    <span className="bg-[#333] px-2 py-0.5 rounded text-[10px] uppercase font-bold text-white border border-[#444]">Lvl 12 Architect</span>
-                                    <span>•</span>
-                                    <span className="text-cyber-blue font-bold">{MOCK_USER.xp.toLocaleString()} XP</span>
+                                <div className="flex items-center gap-3 mt-1.5 ">
+                                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-[10px] uppercase font-black text-slate-400">
+                                        <Zap size={10} className="text-blue-400" /> Lvl 12 Architect
+                                    </div>
+                                    <span className="w-1 h-1 rounded-full bg-slate-700"></span>
+                                    <span className="text-cyber-blue font-black tracking-wider text-[11px] uppercase">{MOCK_USER.xp.toLocaleString()} XP COLLECTED</span>
                                 </div>
                             </div>
                         </div>
@@ -130,18 +141,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ setMode }) => {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
 
                         {/* Learning Progress */}
-                        <div className="bg-[#252526] rounded-xl border border-[#333] flex flex-col overflow-hidden shadow-lg h-full min-h-[320px]">
-                            <div className="p-5 border-b border-[#333] flex justify-between items-center bg-[#2d2d2d]/50 backdrop-blur-sm">
-                                <h2 className="font-bold text-white flex items-center gap-2">
-                                    <Book size={18} className="text-cyber-neon" /> Current Path
+                        <div className="bg-[#161617]/40 backdrop-blur-xl rounded-2xl border border-white/5 flex flex-col overflow-hidden shadow-2xl h-full min-h-[320px] group/card">
+                            <div className="p-5 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
+                                <h2 className="font-black text-white text-[10px] uppercase tracking-[0.2em] flex items-center gap-3">
+                                    <div className="w-2 h-2 rounded-full bg-cyber-neon shadow-[0_0_8px_#10b981]"></div> Active Training Path
                                 </h2>
-                                <button className="text-xs text-cyber-blue hover:text-white flex items-center gap-1 transition-colors font-bold">
-                                    View Curriculum <ArrowUpRight size={12} />
+                                <button className="text-[10px] text-cyber-blue hover:text-white flex items-center gap-1.5 transition-colors font-bold uppercase tracking-widest">
+                                    Syllabus <ArrowUpRight size={12} />
                                 </button>
                             </div>
-                            <div className="p-6 space-y-8 flex-1 flex flex-col justify-center relative">
-                                {/* Background lines */}
-                                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9IiMzMzMiLz48L3N2Zz4=')] opacity-20 pointer-events-none"></div>
+                            <div className="p-8 space-y-10 flex-1 flex flex-col justify-center relative">
+                                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity"></div>
 
                                 <div className="group cursor-pointer relative z-10 transition-all duration-300 hover:scale-[1.02]">
                                     <div className="flex justify-between text-xs mb-2 text-[#ccc] group-hover:text-white transition-colors">
@@ -180,14 +190,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ setMode }) => {
                         </div>
 
                         {/* Todo List */}
-                        <div className="bg-[#252526] rounded-xl border border-[#333] flex flex-col overflow-hidden shadow-lg h-full min-h-[320px]">
-                            <div className="p-5 border-b border-[#333] flex justify-between items-center bg-[#2d2d2d]/50 backdrop-blur-sm">
-                                <h2 className="font-bold text-white flex items-center gap-2">
-                                    <CheckSquare size={18} className="text-cyber-blue" /> Priority Tasks
+                        <div className="bg-[#161617]/40 backdrop-blur-xl rounded-2xl border border-white/5 flex flex-col overflow-hidden shadow-2xl h-full min-h-[320px] group/todo">
+                            <div className="p-5 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
+                                <h2 className="font-black text-white text-[10px] uppercase tracking-[0.2em] flex items-center gap-3">
+                                    <div className="w-2 h-2 rounded-full bg-cyber-blue shadow-[0_0_8px_#3b82f6]"></div> Priority Protocols
                                 </h2>
-                                <span className="text-[10px] font-bold bg-[#333] px-2 py-1 rounded text-white border border-[#444]">{todos.filter(t => !t.completed).length} PENDING</span>
+                                <span className="text-[10px] font-black bg-white/5 px-2.5 py-1 rounded text-slate-400 border border-white/10 uppercase tracking-widest">{todos.filter(t => !t.completed).length} Pending</span>
                             </div>
-                            <div className="flex-1 p-4 overflow-y-auto space-y-2 max-h-[250px] lg:max-h-none">
+                            <div className="flex-1 p-6 overflow-y-auto space-y-3 max-h-[250px] lg:max-h-none scrollbar-thin scrollbar-thumb-white/5">
                                 {todos.map(todo => (
                                     <div key={todo.id} className="flex items-center gap-3 p-3 glass-effect hover:bg-[#2a2a2a]/70 border border-[#333] rounded-lg transition-all duration-300 group shadow-sm hover:border-cyber-blue/30 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(59,130,246,0.1)] animate-slide-in-left">
                                         <button
@@ -229,17 +239,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ setMode }) => {
                         </div>
 
                         {/* Activity Chart (Modernized) */}
-                        <div className="col-span-1 lg:col-span-2 bg-[#252526] rounded-xl border border-[#333] flex flex-col overflow-hidden shadow-lg min-h-[350px]">
-                            <div className="p-5 border-b border-[#333] flex justify-between items-center bg-[#2d2d2d]/50 backdrop-blur-sm">
-                                <h2 className="font-bold text-white flex items-center gap-2">
-                                    <Zap size={18} className="text-yellow-500 fill-yellow-500" /> Activity Metrics
+                        <div className="col-span-1 lg:col-span-2 bg-[#161617]/40 backdrop-blur-xl rounded-2xl border border-white/5 flex flex-col overflow-hidden shadow-2xl min-h-[350px]">
+                            <div className="p-5 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
+                                <h2 className="font-black text-white text-[10px] uppercase tracking-[0.2em] flex items-center gap-3">
+                                    <Zap size={10} className="text-yellow-500 fill-yellow-500" /> Performance Metrics
                                 </h2>
-                                <div className="flex items-center gap-4">
-                                    <div className="flex items-center gap-4 text-[10px] font-bold uppercase tracking-wider">
-                                        <div className="flex items-center gap-1.5 text-gray-400"><span className="w-2 h-2 rounded-full bg-cyber-purple"></span> Previous</div>
-                                        <div className="flex items-center gap-1.5 text-white"><span className="w-2 h-2 rounded-full bg-cyber-blue shadow-[0_0_8px_#3b82f6]"></span> Current</div>
+                                <div className="flex items-center gap-6">
+                                    <div className="flex items-center gap-4 text-[9px] font-black uppercase tracking-[0.15em]">
+                                        <div className="flex items-center gap-1.5 text-slate-500"><span className="w-1.5 h-1.5 rounded-full bg-cyber-purple"></span> Previous</div>
+                                        <div className="flex items-center gap-1.5 text-white"><span className="w-1.5 h-1.5 rounded-full bg-cyber-blue shadow-[0_0_8px_#3b82f6]"></span> Current Cycle</div>
                                     </div>
-                                    <select className="bg-[#1e1e1e] border border-[#333] text-[10px] font-bold text-white px-2 py-1 rounded focus:outline-none focus:border-cyber-blue">
+                                    <select className="bg-white/5 border border-white/10 text-[9px] font-black uppercase tracking-widest text-white px-3 py-1.5 rounded-lg focus:outline-none focus:border-cyber-blue transition-colors">
                                         <option>Weekly View</option>
                                         <option>Monthly View</option>
                                     </select>
