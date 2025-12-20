@@ -111,13 +111,13 @@ export const Blackhole: React.FC<BlackholeProps> = ({ onClose }) => {
     return (
         <div
             ref={windowRef}
-            className={`fixed bg-gradient-to-br from-[#0f0f10] via-[#1a1a2e] to-[#0f0f10] backdrop-blur-xl border border-purple-500/20 rounded-2xl shadow-[0_0_80px_rgba(139,92,246,0.3)] z-50 flex flex-col overflow-hidden transition-all duration-300 ${isMinimized ? 'w-[300px] h-[60px]' : 'w-[400px] h-[600px]'
+            className={`fixed bg-gradient-to-br from-[#0f0f10] via-[#1a1a2e] to-[#0f0f10] backdrop-blur-xl border border-purple-500/30 rounded-2xl shadow-[0_0_80px_rgba(139,92,246,0.4)] z-50 flex flex-col overflow-hidden transition-all duration-500 ease-out ${isMinimized ? 'w-[300px] h-[60px]' : 'w-[400px] h-[600px]'
                 }`}
             style={{ left: position.x, top: position.y }}
         >
             {/* Animated Background */}
             <div className="absolute inset-0 opacity-10">
-                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-purple-500 via-transparent to-blue-500 animate-pulse"></div>
+                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-purple-500 via-transparent to-blue-500 animate-gradient-shift"></div>
             </div>
 
             {/* Header (Draggable) */}
@@ -126,7 +126,7 @@ export const Blackhole: React.FC<BlackholeProps> = ({ onClose }) => {
                 onMouseDown={handleMouseDown}
             >
                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center shadow-[0_0_20px_rgba(139,92,246,0.5)] animate-pulse">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center shadow-[0_0_20px_rgba(139,92,246,0.6)] animate-glow-pulse">
                         <Sparkles size={16} className="text-white" />
                     </div>
                     <div>
@@ -158,7 +158,7 @@ export const Blackhole: React.FC<BlackholeProps> = ({ onClose }) => {
             {!isMinimized && (
                 <>
                     {/* Chat Area */}
-                    <div className="relative flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-purple-500/20 scrollbar-track-transparent">
+                    <div className="relative flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-purple-500/30 scrollbar-track-transparent">
                         {messages.map((msg, idx) => (
                             <div key={idx} className={`flex gap-3 group ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
                                 {/* Avatar */}
@@ -172,9 +172,9 @@ export const Blackhole: React.FC<BlackholeProps> = ({ onClose }) => {
                                 {/* Message Bubble */}
                                 <div className={`flex flex-col max-w-[75%] ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                                     <div
-                                        className={`px-4 py-3 rounded-2xl text-xs leading-relaxed shadow-lg overflow-hidden break-words whitespace-pre-wrap ${msg.role === 'user'
+                                        className={`px-4 py-3 rounded-2xl text-xs leading-relaxed shadow-lg overflow-hidden break-words whitespace-pre-wrap transition-all duration-300 animate-slide-up ${msg.role === 'user'
                                             ? 'bg-gradient-to-br from-blue-600 to-cyan-600 text-white rounded-tr-sm'
-                                            : 'bg-[#1e1e1e]/80 backdrop-blur-sm border border-purple-500/20 text-gray-200 rounded-tl-sm'
+                                            : 'glass-effect border border-purple-500/30 text-gray-200 rounded-tl-sm hover:border-purple-500/50'
                                             }`}
                                     >
                                         <ReactMarkdown
@@ -262,12 +262,12 @@ export const Blackhole: React.FC<BlackholeProps> = ({ onClose }) => {
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
                                 placeholder="Ask me anything..."
-                                className="flex-1 bg-[#1e1e1e]/50 border border-purple-500/20 rounded-xl px-4 py-3 text-white text-xs focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 outline-none placeholder-gray-500 transition-all"
+                                className="flex-1 bg-[#1e1e1e]/50 border border-purple-500/30 rounded-xl px-4 py-3 text-white text-xs focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30 focus:scale-[1.02] outline-none placeholder-gray-500 transition-all duration-300 focus:shadow-[0_0_20px_rgba(139,92,246,0.2)]"
                             />
                             <button
                                 onClick={handleSendMessage}
                                 disabled={isLoading || !input.trim()}
-                                className="px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white rounded-xl transition-all shadow-[0_0_20px_rgba(139,92,246,0.3)] hover:shadow-[0_0_30px_rgba(139,92,246,0.5)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                className="px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white rounded-xl transition-all duration-300 shadow-[0_0_20px_rgba(139,92,246,0.3)] hover:shadow-[0_0_30px_rgba(139,92,246,0.6)] hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2"
                             >
                                 <Send size={14} />
                             </button>

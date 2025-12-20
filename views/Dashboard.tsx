@@ -100,25 +100,25 @@ export const Dashboard: React.FC<DashboardProps> = ({ setMode }) => {
 
                     {/* Quick Stats Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="bg-[#252526] p-6 rounded-xl border border-[#333] flex items-center gap-5 hover:border-[#555] transition-all hover:-translate-y-1 shadow-lg h-full group relative overflow-hidden">
-                            <div className="absolute top-0 right-0 p-8 bg-cyber-purple/5 rounded-full blur-2xl transform translate-x-1/2 -translate-y-1/2"></div>
-                            <div className="p-4 bg-[#1e1e1e] text-cyber-purple rounded-xl flex items-center justify-center h-16 w-16 shrink-0 border border-[#333] shadow-inner group-hover:scale-110 transition-transform"><Trophy size={28} /></div>
+                        <div className="bg-gradient-to-br from-[#252526] to-[#1e1e1e] p-6 rounded-xl border border-cyber-purple/30 flex items-center gap-5 hover:border-cyber-purple/50 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_60px_rgba(139,92,246,0.2)] shadow-lg h-full group relative overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-br from-cyber-purple/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                            <div className="p-4 bg-gradient-to-br from-cyber-purple/10 to-cyber-purple/5 text-cyber-purple rounded-xl flex items-center justify-center h-16 w-16 shrink-0 border border-cyber-purple/20 shadow-[0_0_20px_rgba(139,92,246,0.2)] group-hover:scale-110 group-hover:shadow-[0_0_30px_rgba(139,92,246,0.4)] transition-all duration-500 relative z-10"><Trophy size={28} className="animate-float" /></div>
                             <div className="relative z-10">
                                 <div className="text-[#858585] text-[10px] uppercase tracking-wider font-bold mb-1">Global Rank</div>
                                 <div className="text-3xl font-black text-white">#42 <span className="text-xs text-green-500 font-bold ml-2 bg-green-900/20 px-1.5 py-0.5 rounded border border-green-900/30">▲ 3</span></div>
                             </div>
                         </div>
-                        <div className="bg-[#252526] p-6 rounded-xl border border-[#333] flex items-center gap-5 hover:border-[#555] transition-all hover:-translate-y-1 shadow-lg h-full group relative overflow-hidden">
-                            <div className="absolute top-0 right-0 p-8 bg-cyber-danger/5 rounded-full blur-2xl transform translate-x-1/2 -translate-y-1/2"></div>
-                            <div className="p-4 bg-[#1e1e1e] text-cyber-danger rounded-xl flex items-center justify-center h-16 w-16 shrink-0 border border-[#333] shadow-inner group-hover:scale-110 transition-transform"><Flame size={28} /></div>
+                        <div className="bg-gradient-to-br from-[#252526] to-[#1e1e1e] p-6 rounded-xl border border-cyber-danger/30 flex items-center gap-5 hover:border-cyber-danger/50 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_60px_rgba(239,68,68,0.2)] shadow-lg h-full group relative overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-br from-cyber-danger/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                            <div className="p-4 bg-gradient-to-br from-cyber-danger/10 to-cyber-danger/5 text-cyber-danger rounded-xl flex items-center justify-center h-16 w-16 shrink-0 border border-cyber-danger/20 shadow-[0_0_20px_rgba(239,68,68,0.2)] group-hover:scale-110 group-hover:shadow-[0_0_30px_rgba(239,68,68,0.4)] transition-all duration-500 relative z-10"><Flame size={28} className="group-hover:animate-pulse" /></div>
                             <div className="relative z-10">
                                 <div className="text-[#858585] text-[10px] uppercase tracking-wider font-bold mb-1">Daily Streak</div>
                                 <div className="text-3xl font-black text-white">{MOCK_USER.streak} <span className="text-xs text-[#666] font-bold">Days</span></div>
                             </div>
                         </div>
-                        <div className="bg-[#252526] p-6 rounded-xl border border-[#333] flex items-center gap-5 hover:border-[#555] transition-all hover:-translate-y-1 shadow-lg h-full group relative overflow-hidden">
-                            <div className="absolute top-0 right-0 p-8 bg-cyber-blue/5 rounded-full blur-2xl transform translate-x-1/2 -translate-y-1/2"></div>
-                            <div className="p-4 bg-[#1e1e1e] text-cyber-blue rounded-xl flex items-center justify-center h-16 w-16 shrink-0 border border-[#333] shadow-inner group-hover:scale-110 transition-transform"><Target size={28} /></div>
+                        <div className="bg-gradient-to-br from-[#252526] to-[#1e1e1e] p-6 rounded-xl border border-cyber-blue/30 flex items-center gap-5 hover:border-cyber-blue/50 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_60px_rgba(59,130,246,0.2)] shadow-lg h-full group relative overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-br from-cyber-blue/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                            <div className="p-4 bg-gradient-to-br from-cyber-blue/10 to-cyber-blue/5 text-cyber-blue rounded-xl flex items-center justify-center h-16 w-16 shrink-0 border border-cyber-blue/20 shadow-[0_0_20px_rgba(59,130,246,0.2)] group-hover:scale-110 group-hover:shadow-[0_0_30px_rgba(59,130,246,0.4)] transition-all duration-500 relative z-10"><Target size={28} /></div>
                             <div className="relative z-10">
                                 <div className="text-[#858585] text-[10px] uppercase tracking-wider font-bold mb-1">Tutorials</div>
                                 <div className="text-3xl font-black text-white">{MOCK_USER.tutorialsCompleted.length} <span className="text-xs text-[#666] font-bold">Done</span></div>
@@ -143,31 +143,37 @@ export const Dashboard: React.FC<DashboardProps> = ({ setMode }) => {
                                 {/* Background lines */}
                                 <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9IiMzMzMiLz48L3N2Zz4=')] opacity-20 pointer-events-none"></div>
 
-                                <div className="group cursor-pointer relative z-10">
+                                <div className="group cursor-pointer relative z-10 transition-all duration-300 hover:scale-[1.02]">
                                     <div className="flex justify-between text-xs mb-2 text-[#ccc] group-hover:text-white transition-colors">
-                                        <span className="font-bold flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-cyber-neon"></div> Backend Fundamentals</span>
-                                        <span className="font-mono">80%</span>
+                                        <span className="font-bold flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-cyber-neon shadow-[0_0_8px_#10b981] animate-glow-pulse"></div> Backend Fundamentals</span>
+                                        <span className="font-mono font-bold">80%</span>
                                     </div>
-                                    <div className="h-2.5 bg-[#1e1e1e] rounded-full overflow-hidden border border-[#333]">
-                                        <div className="h-full bg-cyber-neon w-[80%] shadow-[0_0_15px_rgba(16,185,129,0.5)] transition-all duration-1000 ease-out group-hover:w-[82%]"></div>
+                                    <div className="h-2.5 bg-[#1e1e1e] rounded-full overflow-hidden border border-[#333] shadow-inner">
+                                        <div className="h-full bg-gradient-to-r from-cyber-neon to-cyber-neon-light w-[80%] shadow-[0_0_15px_rgba(16,185,129,0.5)] transition-all duration-1000 ease-out group-hover:w-[82%] relative overflow-hidden">
+                                            <div className="absolute inset-0 animate-shimmer"></div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="group cursor-pointer relative z-10">
+                                <div className="group cursor-pointer relative z-10 transition-all duration-300 hover:scale-[1.02]">
                                     <div className="flex justify-between text-xs mb-2 text-[#ccc] group-hover:text-white transition-colors">
-                                        <span className="font-bold flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-cyber-blue"></div> Database Design</span>
-                                        <span className="font-mono">33%</span>
+                                        <span className="font-bold flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-cyber-blue shadow-[0_0_8px_#3b82f6] animate-glow-pulse"></div> Database Design</span>
+                                        <span className="font-mono font-bold">33%</span>
                                     </div>
-                                    <div className="h-2.5 bg-[#1e1e1e] rounded-full overflow-hidden border border-[#333]">
-                                        <div className="h-full bg-cyber-blue w-[33%] shadow-[0_0_15px_rgba(59,130,246,0.5)] transition-all duration-1000 ease-out group-hover:w-[35%]"></div>
+                                    <div className="h-2.5 bg-[#1e1e1e] rounded-full overflow-hidden border border-[#333] shadow-inner">
+                                        <div className="h-full bg-gradient-to-r from-cyber-blue to-cyber-blue-light w-[33%] shadow-[0_0_15px_rgba(59,130,246,0.5)] transition-all duration-1000 ease-out group-hover:w-[35%] relative overflow-hidden">
+                                            <div className="absolute inset-0 animate-shimmer"></div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="group cursor-pointer relative z-10">
+                                <div className="group cursor-pointer relative z-10 transition-all duration-300 hover:scale-[1.02]">
                                     <div className="flex justify-between text-xs mb-2 text-[#ccc] group-hover:text-white transition-colors">
-                                        <span className="font-bold flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-cyber-danger"></div> API Security</span>
-                                        <span className="font-mono">25%</span>
+                                        <span className="font-bold flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-cyber-danger shadow-[0_0_8px_#ef4444] animate-glow-pulse"></div> API Security</span>
+                                        <span className="font-mono font-bold">25%</span>
                                     </div>
-                                    <div className="h-2.5 bg-[#1e1e1e] rounded-full overflow-hidden border border-[#333]">
-                                        <div className="h-full bg-cyber-danger w-[25%] shadow-[0_0_15px_rgba(239,68,68,0.5)] transition-all duration-1000 ease-out group-hover:w-[27%]"></div>
+                                    <div className="h-2.5 bg-[#1e1e1e] rounded-full overflow-hidden border border-[#333] shadow-inner">
+                                        <div className="h-full bg-gradient-to-r from-cyber-danger to-red-400 w-[25%] shadow-[0_0_15px_rgba(239,68,68,0.5)] transition-all duration-1000 ease-out group-hover:w-[27%] relative overflow-hidden">
+                                            <div className="absolute inset-0 animate-shimmer"></div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -183,17 +189,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ setMode }) => {
                             </div>
                             <div className="flex-1 p-4 overflow-y-auto space-y-2 max-h-[250px] lg:max-h-none">
                                 {todos.map(todo => (
-                                    <div key={todo.id} className="flex items-center gap-3 p-3 bg-[#1e1e1e] hover:bg-[#2a2a2a] border border-[#333] rounded-lg transition-all group shadow-sm hover:border-[#555]">
+                                    <div key={todo.id} className="flex items-center gap-3 p-3 glass-effect hover:bg-[#2a2a2a]/70 border border-[#333] rounded-lg transition-all duration-300 group shadow-sm hover:border-cyber-blue/30 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(59,130,246,0.1)] animate-slide-in-left">
                                         <button
                                             onClick={() => toggleTodo(todo.id)}
-                                            className={`w-5 h-5 rounded border flex items-center justify-center transition-all shrink-0 ${todo.completed ? 'bg-cyber-blue border-cyber-blue' : 'border-[#555] hover:border-cyber-blue'}`}
+                                            className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-300 shrink-0 ${todo.completed ? 'bg-cyber-blue border-cyber-blue scale-110 shadow-[0_0_10px_rgba(59,130,246,0.5)]' : 'border-[#555] hover:border-cyber-blue hover:scale-110'}`}
                                         >
-                                            {todo.completed && <CheckSquare size={14} className="text-white" />}
+                                            {todo.completed && <CheckSquare size={14} className="text-white animate-scale-in" />}
                                         </button>
-                                        <span className={`flex-1 text-xs font-medium ${todo.completed ? 'text-[#555] line-through decoration-2' : 'text-gray-300'}`}>
+                                        <span className={`flex-1 text-xs font-medium transition-all duration-300 ${todo.completed ? 'text-[#555] line-through decoration-2' : 'text-gray-300'}`}>
                                             {todo.text}
                                         </span>
-                                        <button onClick={() => deleteTodo(todo.id)} className="text-[#555] hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all p-1">
+                                        <button onClick={() => deleteTodo(todo.id)} className="text-[#555] hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all duration-300 p-1 hover:scale-110">
                                             <Trash2 size={14} />
                                         </button>
                                     </div>
@@ -278,7 +284,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setMode }) => {
                                             dataKey="current"
                                             stroke="#3b82f6"
                                             strokeWidth={3}
-                                            activeDot={{ r: 6, strokeWidth: 0, fill: '#fff', shadow: '0 0 10px #3b82f6' }}
+                                            activeDot={{ r: 6, strokeWidth: 0, fill: '#fff' }}
                                             fillOpacity={1}
                                             fill="url(#colorCurrent)"
                                         />
