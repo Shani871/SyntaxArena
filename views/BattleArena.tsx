@@ -38,6 +38,7 @@ export const BattleArena: React.FC<BattleArenaProps> = ({ mode = GameMode.BATTLE
     // Hint Menu State
     const [showHintMenu, setShowHintMenu] = useState(false);
     const [confirmModal, setConfirmModal] = useState<{ show: boolean; type: 'SYNTAX' | 'LOGIC' | 'OPTIMIZATION' | 'EXPLANATION'; cost: number } | null>(null);
+    const [currentHint, setCurrentHint] = useState<{ type: string; text: string } | null>(null);
 
     // Practice State
     const [practiceDifficulty, setPracticeDifficulty] = useState<'Easy' | 'Medium' | 'Hard'>('Medium');
@@ -261,6 +262,11 @@ export const BattleArena: React.FC<BattleArenaProps> = ({ mode = GameMode.BATTLE
         const currentHistory = [...messages, systemMsg, processingMsg];
         const response = await getInvigilatorHint(currentHistory, problem.generatedStory || problem.baseDescription, code, type);
         setMessages(prev => [...prev, { role: 'model', text: response }]);
+
+        // Store hint in sidebar
+        setCurrentHint({ type: type, text: response });
+        // Auto-switch to Problem tab to show hint
+        setActiveLeftTab('DESCRIPTION');
     };
 
     const handleSurrender = () => {
@@ -564,6 +570,25 @@ export const BattleArena: React.FC<BattleArenaProps> = ({ mode = GameMode.BATTLE
                                             {problem.id === 'p2' && <div>Input: intervals = [[1,3],[2,6]]<br />Output: [[1,6]]</div>}
                                             {problem.id === 'p3' && <div>Input: height = [0,1,0,2]<br />Output: 6</div>}
                                         </div>
+
+                                        {/* AI Hint Section */}
+                                        {currentHint && (
+                                            <div className="mt-6 bg-gradient-to-br from-purple-900/20 to-blue-900/20 border border-purple-500/30 rounded-lg p-4 animate-slide-up">
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <Lightbulb size={16} className="text-purple-400 fill-purple-400" />
+                                                    <h4 className="text-purple-300 font-bold text-sm uppercase tracking-wider">AI Hint ({currentHint.type})</h4>
+                                                    <button
+                                                        onClick={() => setCurrentHint(null)}
+                                                        className="ml-auto text-gray-500 hover:text-white transition-colors"
+                                                    >
+                                                        <XCircle size={14} />
+                                                    </button>
+                                                </div>
+                                                <div className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">
+                                                    {currentHint.text}
+                                                </div>
+                                            </div>
+                                        )}
                                     </>
                                 )}
                             </div>
