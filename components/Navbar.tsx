@@ -52,23 +52,26 @@ export const Navbar: React.FC<NavbarProps> = ({ currentMode, setMode }) => {
             key={item.mode}
             onClick={() => setMode(item.mode)}
             title={item.label}
-            className={`group relative flex items-center justify-center p-3 md:py-4 min-w-[3rem] md:w-auto transition-all shrink-0 ${currentMode === item.mode
-              ? 'text-white'
-              : 'text-[#555] hover:text-white hover:bg-white/5'
+            className={`group relative flex items-center justify-center p-3 md:py-4 min-w-[3rem] md:w-auto transition-all duration-300 ease-out ${currentMode === item.mode
+              ? 'text-white scale-110'
+              : 'text-[#555] hover:text-white hover:bg-white/5 hover:scale-105'
               }`}
+            aria-label={item.label}
+            role="button"
           >
-            {/* Active Indicator */}
+            {/* Active Indicator with smooth transition */}
             {currentMode === item.mode && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyber-blue md:h-full md:w-1 md:right-auto md:left-0 shadow-[0_0_10px_#3b82f6]" />
+              <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-cyber-blue to-cyber-purple md:h-full md:w-1 md:right-auto md:left-0 shadow-[0_0_15px_#3b82f6] animate-gradient-shift transition-all duration-500" />
             )}
 
-            <div className={`transition-transform duration-200 flex items-center justify-center ${currentMode === item.mode ? 'scale-110 text-cyber-blue' : ''}`}>
+            <div className={`transition-all duration-300 ease-out flex items-center justify-center ${currentMode === item.mode ? 'scale-110 text-cyber-blue drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]' : 'group-hover:scale-110'}`}>
               {item.icon}
             </div>
 
-            {/* Tooltip for Desktop */}
-            <div className="absolute left-full ml-4 px-2 py-1 bg-black border border-[#333] rounded text-xs text-white opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity hidden md:block whitespace-nowrap z-50 font-bold tracking-wide shadow-xl">
+            {/* Enhanced Tooltip for Desktop */}
+            <div className="absolute left-full ml-4 px-3 py-2 bg-gradient-to-r from-[#1e1e1e] to-[#252526] border border-cyber-blue/30 rounded-lg text-xs text-white opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-300 hidden md:block whitespace-nowrap z-50 font-bold tracking-wide shadow-[0_0_20px_rgba(59,130,246,0.3)] group-hover:translate-x-1">
               {item.label}
+              <div className="absolute right-full top-1/2 -translate-y-1/2 w-0 h-0 border-t-4 border-t-transparent border-r-4 border-r-cyber-blue/30 border-b-4 border-b-transparent"></div>
             </div>
           </button>
         ))}
