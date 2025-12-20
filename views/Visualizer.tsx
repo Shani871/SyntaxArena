@@ -166,8 +166,8 @@ export const Visualizer: React.FC = () => {
                   <button
                     onClick={handleSaveAsDocument}
                     className={`px-3 py-1.5 rounded text-xs font-bold flex items-center gap-2 transition-all ${saveSuccess
-                        ? 'bg-green-600 text-white'
-                        : 'bg-[#333] hover:bg-[#444] text-[#ccc]'
+                      ? 'bg-green-600 text-white'
+                      : 'bg-[#333] hover:bg-[#444] text-[#ccc]'
                       }`}
                   >
                     {saveSuccess ? <Check size={12} /> : <FileText size={12} />}
@@ -272,8 +272,8 @@ export const Visualizer: React.FC = () => {
                   <button
                     onClick={handleSaveAsDocument}
                     className={`px-3 py-1.5 rounded text-xs font-bold flex items-center gap-2 transition-all ${saveSuccess
-                        ? 'bg-green-600 text-white'
-                        : 'bg-[#333] hover:bg-[#444] text-[#ccc]'
+                      ? 'bg-green-600 text-white'
+                      : 'bg-[#333] hover:bg-[#444] text-[#ccc]'
                       }`}
                   >
                     {saveSuccess ? <Check size={12} /> : <FileText size={12} />}

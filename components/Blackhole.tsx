@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { X, Send, MessageSquare, Loader2, GripHorizontal, Sparkles, ThumbsUp, ThumbsDown, Minimize2, Maximize2, Copy, Check, Bot, User as UserIcon } from 'lucide-react';
 import { chatWithBlackhole } from '../services/geminiService';
 import { ChatMessage } from '../types';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface BlackholeProps {
     onClose: () => void;
@@ -102,31 +104,7 @@ export const Blackhole: React.FC<BlackholeProps> = ({ onClose }) => {
         setTimeout(() => setCopiedIndex(null), 2000);
     };
 
-    const formatMessage = (text: string) => {
-        // Simple markdown-like formatting
-        return text
-            .split('\n')
-            .map((line, i) => {
-                // Code blocks
-                if (line.startsWith('```')) {
-                    return <div key={i} className="bg-[#0a0a0a] border border-[#333] rounded px-2 py-1 my-1 font-mono text-[10px] text-green-400">{line.replace(/```/g, '')}</div>;
-                }
-                // Bold
-                if (line.includes('**')) {
-                    const parts = line.split('**');
-                    return (
-                        <div key={i}>
-                            {parts.map((part, j) => j % 2 === 0 ? part : <strong key={j} className="text-white font-bold">{part}</strong>)}
-                        </div>
-                    );
-                }
-                // Bullet points
-                if (line.startsWith('•') || line.startsWith('-')) {
-                    return <div key={i} className="ml-2 text-gray-300">• {line.substring(1).trim()}</div>;
-                }
-                return <div key={i}>{line || <br />}</div>;
-            });
-    };
+
 
     if (!position) return null;
 
@@ -185,8 +163,8 @@ export const Blackhole: React.FC<BlackholeProps> = ({ onClose }) => {
                             <div key={idx} className={`flex gap-3 group ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
                                 {/* Avatar */}
                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${msg.role === 'user'
-                                        ? 'bg-gradient-to-br from-blue-500 to-cyan-500 shadow-[0_0_15px_rgba(59,130,246,0.4)]'
-                                        : 'bg-gradient-to-br from-purple-500 to-pink-500 shadow-[0_0_15px_rgba(168,85,247,0.4)]'
+                                    ? 'bg-gradient-to-br from-blue-500 to-cyan-500 shadow-[0_0_15px_rgba(59,130,246,0.4)]'
+                                    : 'bg-gradient-to-br from-purple-500 to-pink-500 shadow-[0_0_15px_rgba(168,85,247,0.4)]'
                                     }`}>
                                     {msg.role === 'user' ? <UserIcon size={14} className="text-white" /> : <Bot size={14} className="text-white" />}
                                 </div>
@@ -194,12 +172,40 @@ export const Blackhole: React.FC<BlackholeProps> = ({ onClose }) => {
                                 {/* Message Bubble */}
                                 <div className={`flex flex-col max-w-[75%] ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                                     <div
-                                        className={`px-4 py-3 rounded-2xl text-xs leading-relaxed shadow-lg ${msg.role === 'user'
-                                                ? 'bg-gradient-to-br from-blue-600 to-cyan-600 text-white rounded-tr-sm'
-                                                : 'bg-[#1e1e1e]/80 backdrop-blur-sm border border-purple-500/20 text-gray-200 rounded-tl-sm'
+                                        className={`px-4 py-3 rounded-2xl text-xs leading-relaxed shadow-lg overflow-hidden break-words whitespace-pre-wrap ${msg.role === 'user'
+                                            ? 'bg-gradient-to-br from-blue-600 to-cyan-600 text-white rounded-tr-sm'
+                                            : 'bg-[#1e1e1e]/80 backdrop-blur-sm border border-purple-500/20 text-gray-200 rounded-tl-sm'
                                             }`}
                                     >
-                                        {formatMessage(msg.text)}
+                                        <ReactMarkdown
+                                            remarkPlugins={[remarkGfm]}
+                                            components={{
+                                                code({ className, children, ...props }) {
+                                                    const match = /language-(\w+)/.exec(className || '')
+                                                    const isInline = !match && !className?.includes('language-') && !String(children).includes('\n');
+                                                    // @ts-ignore
+                                                    const isCodeBlock = !isInline;
+                                                    return isCodeBlock ? (
+                                                        <code className={`block bg-[#0a0a0a] border border-[#333] rounded-lg p-3 my-2 font-mono text-xs overflow-x-auto text-green-400 ${className}`} {...props}>
+                                                            {children}
+                                                        </code>
+                                                    ) : (
+                                                        <code className="bg-[#0a0a0a] border border-[#333] rounded px-1.5 py-0.5 font-mono text-[10px] text-amber-500" {...props}>
+                                                            {children}
+                                                        </code>
+                                                    )
+                                                },
+                                                p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                                                ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-1">{children}</ul>,
+                                                ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-1">{children}</ol>,
+                                                li: ({ children }) => <li className="text-gray-300">{children}</li>,
+                                                a: ({ href, children }) => <a href={href} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">{children}</a>,
+                                                strong: ({ children }) => <strong className="text-white font-bold">{children}</strong>,
+                                                blockquote: ({ children }) => <blockquote className="border-l-2 border-purple-500 pl-3 my-2 italic text-gray-400">{children}</blockquote>,
+                                            }}
+                                        >
+                                            {msg.text}
+                                        </ReactMarkdown>
                                     </div>
 
                                     {/* Actions */}
