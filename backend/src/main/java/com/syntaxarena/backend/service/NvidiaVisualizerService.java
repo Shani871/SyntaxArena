@@ -2,8 +2,10 @@ package com.syntaxarena.backend.service;
 
 import com.syntaxarena.backend.model.ExecutionFlowRequest;
 import com.syntaxarena.backend.model.ExecutionFlowResponse;
+import com.syntaxarena.backend.model.ExecutionFlowResponse.VisualizerStep;
 import com.syntaxarena.backend.model.ConceptRequest;
 import com.syntaxarena.backend.model.ConceptResponse;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,6 +16,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -26,31 +29,28 @@ public class NvidiaVisualizerService {
 
     private final HttpClient httpClient = HttpClient.newBuilder()
             .version(HttpClient.Version.HTTP_2)
-            .connectTimeout(Duration.ofSeconds(15))
+            .connectTimeout(Duration.ofSeconds(30))
             .build();
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public ExecutionFlowResponse visualizeExecution(ExecutionFlowRequest request) {
         String prompt = String.format(
-                "Analyze this %s code step by step.\n\n" +
+                "You are a code execution visualizer. Analyze this %s code step by step.\n\n" +
                         "Code:\n```\n%s\n```\n\n" +
                         "Instructions:\n" +
-                        "1. Show exactly what happens at EACH line of code\n" +
-                        "2. Format as numbered steps: Step 1, Step 2, etc.\n" +
-                        "3. For each step show: Line, Action, Variable values\n" +
-                        "4. Keep each step SHORT (1-2 sentences max)\n" +
-                        "5. Use simple language, no complex tables\n\n" +
-                        "Example format:\n" +
-                        "Step 1: Function factorial(3) is called with n=3\n" +
-                        "Step 2: Check if n===0 (false), so continue\n" +
-                        "Step 3: Return 3 * factorial(2)...",
+                        "1. Return ONLY a valid JSON array of objects.\n" +
+                        "2. Each object must obey this schema: { \"step\": number, \"line\": number, \"description\": string, \"variables\": { \"varName\": \"value\" } }\n"
+                        +
+                        "3. 'line' is the 1-based line number being executed.\n" +
+                        "4. 'variables' should show valid variable state at that step.\n" +
+                        "5. Do NOT include any text outside the JSON block.\n",
                 request.getLanguage(), request.getCode());
 
         try {
             Map<String, Object> payload = new HashMap<>();
             payload.put("model", "nvidia/nemotron-3-nano-30b-a3b");
-            payload.put("temperature", 0.5);
+            payload.put("temperature", 0.2); // Low temperature for deterministic JSON
             payload.put("top_p", 1);
             payload.put("max_tokens", 2048);
             payload.put("stream", false);
@@ -59,8 +59,6 @@ public class NvidiaVisualizerService {
             message.put("role", "user");
             message.put("content", prompt);
             payload.put("messages", List.of(message));
-
-            // Removed thinking mode for cleaner output
 
             String requestBody = objectMapper.writeValueAsString(payload);
             String url = "https://integrate.api.nvidia.com/v1/chat/completions";
@@ -78,12 +76,13 @@ public class NvidiaVisualizerService {
                 return parseExecutionResponse(response.body());
             } else {
                 System.out.println("API Error: " + response.body());
-                return new ExecutionFlowResponse("Error: Could not visualize execution.");
+                return new ExecutionFlowResponse(
+                        "Error: Could not visualize execution. Status: " + response.statusCode());
             }
 
         } catch (Exception e) {
             System.out.println("Exception: " + e.getMessage());
-            return new ExecutionFlowResponse("Error visualizing code execution.");
+            return new ExecutionFlowResponse("Error visualizing code execution: " + e.getMessage());
         }
     }
 
@@ -100,18 +99,14 @@ public class NvidiaVisualizerService {
 
         try {
             Map<String, Object> payload = new HashMap<>();
-            payload.put("model", "nvidia/nemotron-3-nano-30b-a3b");
+            payload.put("model", "nvidia/nemotron-3-nano-30b-a3b"); // Or another suitable model
             payload.put("temperature", 0.7);
-            payload.put("top_p", 1);
             payload.put("max_tokens", 1024);
-            payload.put("stream", false);
 
             Map<String, Object> message = new HashMap<>();
             message.put("role", "user");
             message.put("content", prompt);
             payload.put("messages", List.of(message));
-
-            // Removed thinking mode for cleaner output
 
             String requestBody = objectMapper.writeValueAsString(payload);
             String url = "https://integrate.api.nvidia.com/v1/chat/completions";
@@ -128,12 +123,10 @@ public class NvidiaVisualizerService {
             if (response.statusCode() == 200) {
                 return parseConceptResponse(response.body());
             } else {
-                System.out.println("API Error: " + response.body());
                 return new ConceptResponse("Error: Could not simplify concept.");
             }
 
         } catch (Exception e) {
-            System.out.println("Exception: " + e.getMessage());
             return new ConceptResponse("Error simplifying concept.");
         }
     }
@@ -141,11 +134,22 @@ public class NvidiaVisualizerService {
     private ExecutionFlowResponse parseExecutionResponse(String jsonResponse) {
         try {
             JsonNode root = objectMapper.readTree(jsonResponse);
-            String text = root.path("choices").get(0).path("message").path("content").asText();
-            return new ExecutionFlowResponse(text);
+            String content = root.path("choices").get(0).path("message").path("content").asText();
+
+            // Clean up content to find JSON array
+            int startIndex = content.indexOf("[");
+            int endIndex = content.lastIndexOf("]");
+            if (startIndex == -1 || endIndex == -1) {
+                return new ExecutionFlowResponse("Error: AI did not return valid JSON steps.");
+            }
+            String jsonArray = content.substring(startIndex, endIndex + 1);
+
+            List<VisualizerStep> steps = objectMapper.readValue(jsonArray, new TypeReference<List<VisualizerStep>>() {
+            });
+            return new ExecutionFlowResponse(steps);
         } catch (Exception e) {
             System.out.println("Parse error: " + e.getMessage());
-            return new ExecutionFlowResponse("Could not parse response.");
+            return new ExecutionFlowResponse("Could not parse AI response into steps.");
         }
     }
 
@@ -155,7 +159,6 @@ public class NvidiaVisualizerService {
             String text = root.path("choices").get(0).path("message").path("content").asText();
             return new ConceptResponse(text);
         } catch (Exception e) {
-            System.out.println("Parse error: " + e.getMessage());
             return new ConceptResponse("Could not parse response.");
         }
     }

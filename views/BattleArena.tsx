@@ -33,7 +33,9 @@ export const BattleArena: React.FC<BattleArenaProps> = ({ mode = GameMode.BATTLE
 
     // Practice State
     const [practiceDifficulty, setPracticeDifficulty] = useState<'Easy' | 'Medium' | 'Hard'>('Medium');
+    const [practiceTopic, setPracticeTopic] = useState("Algorithms");
     const [practiceStats, setPracticeStats] = useState({ solved: 0, attempts: 0 });
+    const [editorTheme, setEditorTheme] = useState("cyberpunk");
 
     // Battle State
     const [battle, setBattle] = useState<BattleState>({
@@ -89,7 +91,7 @@ export const BattleArena: React.FC<BattleArenaProps> = ({ mode = GameMode.BATTLE
         // Reset state for new problem
         // Use backend to generate a fresh problem if possible
         const backendQuestion = await apiService.generateQuestion(
-            difficulty === 'Easy' ? 'Arrays' : difficulty === 'Medium' ? 'Dynamic Programming' : 'Graph', // Map difficulty to topic for demo
+            practiceTopic, // Use dynamic topic
             difficulty,
             selectedLanguage // Use selected language
         );
@@ -497,12 +499,21 @@ export const BattleArena: React.FC<BattleArenaProps> = ({ mode = GameMode.BATTLE
                         {activeLeftTab === 'CONFIG' && mode === GameMode.PRACTICE && (
                             <div className="space-y-6">
                                 <div className="bg-[#1e1e1e] p-4 rounded border border-[#333]">
+                                    <div className="text-xs text-[#888] mb-3 font-bold uppercase">Topic</div>
+                                    <input
+                                        type="text"
+                                        value={practiceTopic}
+                                        onChange={(e) => setPracticeTopic(e.target.value)}
+                                        className="w-full bg-[#252526] border border-[#333] rounded px-3 py-2 text-xs text-white focus:border-cyber-neon outline-none mb-4"
+                                        placeholder="e.g. Arrays, Recursion..."
+                                    />
+
                                     <div className="text-xs text-[#888] mb-3 font-bold uppercase">Difficulty</div>
                                     <div className="flex gap-2 mb-4">
                                         {(['Easy', 'Medium', 'Hard'] as const).map(diff => (
                                             <button
                                                 key={diff}
-                                                onClick={() => loadPracticeProblem(diff)}
+                                                onClick={() => { setPracticeDifficulty(diff); loadPracticeProblem(diff); }}
                                                 className={`flex-1 py-2 text-xs font-bold rounded transition-all border ${practiceDifficulty === diff
                                                     ? 'bg-cyber-neon/10 text-cyber-neon border-cyber-neon'
                                                     : 'bg-[#252526] text-[#666] border-transparent hover:bg-[#333]'
@@ -518,6 +529,21 @@ export const BattleArena: React.FC<BattleArenaProps> = ({ mode = GameMode.BATTLE
                                     >
                                         <RefreshCw size={12} /> Reload Problem
                                     </button>
+                                </div>
+
+                                <div className="bg-[#1e1e1e] p-4 rounded border border-[#333]">
+                                    <div className="text-xs text-[#888] mb-3 font-bold uppercase">Editor Theme</div>
+                                    <div className="flex gap-2">
+                                        {['cyberpunk', 'vs-dark', 'light'].map(t => (
+                                            <button
+                                                key={t}
+                                                onClick={() => setEditorTheme(t)}
+                                                className={`flex-1 py-2 text-xs font-bold rounded capitalize border ${editorTheme === t ? 'bg-cyber-blue/10 text-cyber-blue border-cyber-blue' : 'bg-[#252526] text-[#666] border-transparent'}`}
+                                            >
+                                                {t.replace('vs-', '').replace('cyberpunk', 'Cyber')}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3">
@@ -582,6 +608,7 @@ export const BattleArena: React.FC<BattleArenaProps> = ({ mode = GameMode.BATTLE
                             setCode={setCode}
                             preventPaste={true}
                             language={selectedLanguage}
+                            theme={editorTheme}
                         />
                     </div>
 

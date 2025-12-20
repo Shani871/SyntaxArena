@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Cpu, Languages, RefreshCcw, PlayCircle, BookOpen, Share2, FileCode, FileText, Check } from 'lucide-react';
+import { Box, Cpu, Languages, RefreshCcw, PlayCircle, BookOpen, Share2, FileCode, FileText, Check, ChevronRight, ChevronLeft, PauseCircle, Square, Play } from 'lucide-react';
 import { CodeEditor } from '../components/CodeEditor';
 import { generateApiDiagram } from '../services/geminiService';
 import { apiService } from '../services/apiService';
@@ -14,7 +14,51 @@ export const Visualizer: React.FC = () => {
   return n * factorial(n - 1);
 }`);
   const [steps, setSteps] = useState<VisualizerStep[]>([]);
+  const [currentStepIndex, setCurrentStepIndex] = useState(-1);
   const [loading, setLoading] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  // Timer State
+  const [timer, setTimer] = useState(0);
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+
+  // Timer Logic
+  React.useEffect(() => {
+    let interval: any;
+    if (isTimerRunning) {
+      interval = setInterval(() => {
+        setTimer(prev => prev + 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isTimerRunning]);
+
+  const formatTime = (seconds: number) => {
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Playback Logic
+  React.useEffect(() => {
+    let interval: any;
+    if (isPlaying && steps.length > 0) {
+      interval = setInterval(() => {
+        setCurrentStepIndex(prev => {
+          if (prev < steps.length - 1) return prev + 1;
+          setIsPlaying(false);
+          return prev;
+        });
+      }, 1500);
+    }
+    return () => clearInterval(interval);
+  }, [isPlaying, steps]);
+
+  const handleStep = (direction: 'next' | 'prev') => {
+    if (direction === 'next' && currentStepIndex < steps.length - 1) setCurrentStepIndex(currentStepIndex + 1);
+    if (direction === 'prev' && currentStepIndex > 0) setCurrentStepIndex(currentStepIndex - 1);
+  };
 
   // Story/Concept State
   const [storyCode, setStoryCode] = useState(`// Paste code here to get a story...`);
@@ -35,9 +79,9 @@ export const Visualizer: React.FC = () => {
   const handleVisualize = async () => {
     setLoading(true);
     const result = await apiService.visualizeExecution(code, language);
-    // For now, display as single step with the full result
     if (result) {
-      setSteps([{ step: 1, description: result, changedVariables: {} }]);
+      setSteps(result);
+      setCurrentStepIndex(0); // Start at step 0
     }
     setLoading(false);
   };
@@ -152,12 +196,33 @@ export const Visualizer: React.FC = () => {
           <div className="w-full h-full flex flex-col lg:flex-row">
             <div className="w-full lg:w-1/2 h-1/2 lg:h-full flex flex-col border-b lg:border-b-0 lg:border-r border-[#333]">
               <div className="flex justify-between items-center p-2 bg-[#2d2d2d] border-b border-[#333]">
-                <span className="text-xs text-[#ccc] pl-2">Input Code</span>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-[#ccc] pl-2 font-bold">Input Code</span>
+                  <div className="flex items-center gap-1 bg-[#1e1e1e] rounded p-0.5 border border-[#444]">
+                    {!isTimerRunning ? (
+                      <button onClick={() => setIsTimerRunning(true)} className="p-1 hover:bg-[#333] rounded text-green-500" title="Start Timer">
+                        <Play size={10} fill="currentColor" />
+                      </button>
+                    ) : (
+                      <button onClick={() => setIsTimerRunning(false)} className="p-1 hover:bg-[#333] rounded text-red-500" title="Stop Timer">
+                        <Square size={10} fill="currentColor" />
+                      </button>
+                    )}
+                    <span className={`text-[10px] font-mono px-1 min-w-[50px] text-center ${isTimerRunning ? 'text-white' : 'text-[#666]'}`}>
+                      {formatTime(timer)}
+                    </span>
+                  </div>
+                </div>
                 <button onClick={handleVisualize} disabled={loading} className="px-3 py-1 bg-cyber-purple text-white rounded text-xs flex items-center gap-1">
                   {loading ? <RefreshCcw className="animate-spin" size={12} /> : <PlayCircle size={12} />} Run
                 </button>
               </div>
-              <CodeEditor code={code} setCode={setCode} />
+              <CodeEditor
+                code={code}
+                setCode={setCode}
+                activeLine={currentStepIndex >= 0 ? steps[currentStepIndex]?.line : undefined}
+                timerValue={formatTime(timer)}
+              />
             </div>
             <div className="w-full lg:w-1/2 h-1/2 lg:h-full bg-[#1e1e1e] p-4 pb-24 overflow-y-auto">
               <div className="flex justify-between items-center mb-4">
@@ -166,8 +231,8 @@ export const Visualizer: React.FC = () => {
                   <button
                     onClick={handleSaveAsDocument}
                     className={`px-3 py-1.5 rounded text-xs font-bold flex items-center gap-2 transition-all ${saveSuccess
-                        ? 'bg-green-600 text-white'
-                        : 'bg-[#333] hover:bg-[#444] text-[#ccc]'
+                      ? 'bg-green-600 text-white'
+                      : 'bg-[#333] hover:bg-[#444] text-[#ccc]'
                       }`}
                   >
                     {saveSuccess ? <Check size={12} /> : <FileText size={12} />}
@@ -196,107 +261,110 @@ export const Visualizer: React.FC = () => {
               )}
             </div>
           </div>
-        )}
+        )
+        }
 
         {/* STORY & DIAGRAM & CONCEPT Shared Layout */}
-        {activeTab !== 'EXECUTION' && (
-          <div className="w-full h-full flex flex-col lg:flex-row">
-            <div className="w-full lg:w-1/2 h-1/2 lg:h-full flex flex-col border-b lg:border-b-0 lg:border-r border-[#333]">
-              {/* Controls */}
-              <div className="p-4 bg-[#252526] border-b border-[#333] space-y-4">
-                {activeTab === 'CONCEPT' && (
-                  <input
-                    value={concept}
-                    onChange={(e) => setConcept(e.target.value)}
-                    className="w-full bg-[#1e1e1e] border border-[#333] p-2 rounded text-white text-xs"
-                    placeholder="Enter concept (e.g. Database Indexing)"
-                  />
-                )}
-
-                <div className="flex flex-wrap gap-4">
-                  <select
-                    value={language}
-                    onChange={(e) => setLanguage(e.target.value)}
-                    className="bg-[#1e1e1e] border border-[#333] p-2 rounded text-white text-xs flex-1 min-w-[100px]"
-                  >
-                    <option>English</option>
-                    <option>Spanish</option>
-                    <option>French</option>
-                    <option>German</option>
-                    <option>Gujarati</option>
-                    <option>Telugu</option>
-                    <option>Kannada</option>
-                  </select>
-
+        {
+          activeTab !== 'EXECUTION' && (
+            <div className="w-full h-full flex flex-col lg:flex-row">
+              <div className="w-full lg:w-1/2 h-1/2 lg:h-full flex flex-col border-b lg:border-b-0 lg:border-r border-[#333]">
+                {/* Controls */}
+                <div className="p-4 bg-[#252526] border-b border-[#333] space-y-4">
                   {activeTab === 'CONCEPT' && (
-                    <select
-                      value={difficulty}
-                      onChange={(e) => setDifficulty(e.target.value as any)}
-                      className="bg-[#1e1e1e] border border-[#333] p-2 rounded text-white text-xs flex-1 min-w-[100px]"
-                    >
-                      <option>Beginner</option>
-                      <option>Intermediate</option>
-                      <option>Advanced</option>
-                    </select>
+                    <input
+                      value={concept}
+                      onChange={(e) => setConcept(e.target.value)}
+                      className="w-full bg-[#1e1e1e] border border-[#333] p-2 rounded text-white text-xs"
+                      placeholder="Enter concept (e.g. Database Indexing)"
+                    />
                   )}
 
-                  <button
-                    onClick={activeTab === 'STORY' ? handleGenerateStory : activeTab === 'DIAGRAM' ? handleGenerateDiagram : handleExplainConcept}
-                    disabled={contentLoading}
-                    className="px-4 py-2 bg-cyber-blue text-white rounded text-xs font-bold disabled:opacity-50 flex-1 min-w-[80px]"
-                  >
-                    {contentLoading ? "Generating..." : "Generate"}
-                  </button>
-                </div>
-              </div>
+                  <div className="flex flex-wrap gap-4">
+                    <select
+                      value={language}
+                      onChange={(e) => setLanguage(e.target.value)}
+                      className="bg-[#1e1e1e] border border-[#333] p-2 rounded text-white text-xs flex-1 min-w-[100px]"
+                    >
+                      <option>English</option>
+                      <option>Spanish</option>
+                      <option>French</option>
+                      <option>German</option>
+                      <option>Gujarati</option>
+                      <option>Telugu</option>
+                      <option>Kannada</option>
+                    </select>
 
-              {/* Editor for Story/Diagram input */}
-              {activeTab !== 'CONCEPT' && (
-                <div className="flex-1 min-h-0 flex flex-col">
-                  <div className="bg-[#2d2d2d] px-2 py-1 text-xs text-[#ccc]">Input Code</div>
-                  <CodeEditor
-                    code={activeTab === 'STORY' ? storyCode : apiCode}
-                    setCode={activeTab === 'STORY' ? setStoryCode : setApiCode}
-                  />
-                </div>
-              )}
-            </div>
+                    {activeTab === 'CONCEPT' && (
+                      <select
+                        value={difficulty}
+                        onChange={(e) => setDifficulty(e.target.value as any)}
+                        className="bg-[#1e1e1e] border border-[#333] p-2 rounded text-white text-xs flex-1 min-w-[100px]"
+                      >
+                        <option>Beginner</option>
+                        <option>Intermediate</option>
+                        <option>Advanced</option>
+                      </select>
+                    )}
 
-            {/* Output Panel */}
-            <div className="w-full lg:w-1/2 h-1/2 lg:h-full bg-[#1e1e1e] p-6 pb-24 overflow-y-auto border-t lg:border-t-0">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xs font-bold text-[#858585] uppercase flex items-center gap-2">
-                  <FileCode size={14} /> AI Output
-                </h3>
-                {outputContent && (
-                  <button
-                    onClick={handleSaveAsDocument}
-                    className={`px-3 py-1.5 rounded text-xs font-bold flex items-center gap-2 transition-all ${saveSuccess
-                        ? 'bg-green-600 text-white'
-                        : 'bg-[#333] hover:bg-[#444] text-[#ccc]'
-                      }`}
-                  >
-                    {saveSuccess ? <Check size={12} /> : <FileText size={12} />}
-                    {saveSuccess ? 'Saved!' : 'Save as Doc'}
-                  </button>
+                    <button
+                      onClick={activeTab === 'STORY' ? handleGenerateStory : activeTab === 'DIAGRAM' ? handleGenerateDiagram : handleExplainConcept}
+                      disabled={contentLoading}
+                      className="px-4 py-2 bg-cyber-blue text-white rounded text-xs font-bold disabled:opacity-50 flex-1 min-w-[80px]"
+                    >
+                      {contentLoading ? "Generating..." : "Generate"}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Editor for Story/Diagram input */}
+                {activeTab !== 'CONCEPT' && (
+                  <div className="flex-1 min-h-0 flex flex-col">
+                    <div className="bg-[#2d2d2d] px-2 py-1 text-xs text-[#ccc]">Input Code</div>
+                    <CodeEditor
+                      code={activeTab === 'STORY' ? storyCode : apiCode}
+                      setCode={activeTab === 'STORY' ? setStoryCode : setApiCode}
+                    />
+                  </div>
                 )}
               </div>
-              {outputContent ? (
-                <div className="prose prose-invert prose-sm font-mono whitespace-pre-wrap leading-relaxed text-[#d4d4d4]">
-                  {outputContent}
-                </div>
-              ) : (
-                <div className="text-[#555] text-center mt-20">
-                  {activeTab === 'STORY' && "Paste code and click Generate to see the story."}
-                  {activeTab === 'DIAGRAM' && "Paste API route and click Generate to see the flow."}
-                  {activeTab === 'CONCEPT' && "Enter a concept to get a simplified explanation."}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
 
-      </div>
-    </div>
+              {/* Output Panel */}
+              <div className="w-full lg:w-1/2 h-1/2 lg:h-full bg-[#1e1e1e] p-6 pb-24 overflow-y-auto border-t lg:border-t-0">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-xs font-bold text-[#858585] uppercase flex items-center gap-2">
+                    <FileCode size={14} /> AI Output
+                  </h3>
+                  {outputContent && (
+                    <button
+                      onClick={handleSaveAsDocument}
+                      className={`px-3 py-1.5 rounded text-xs font-bold flex items-center gap-2 transition-all ${saveSuccess
+                        ? 'bg-green-600 text-white'
+                        : 'bg-[#333] hover:bg-[#444] text-[#ccc]'
+                        }`}
+                    >
+                      {saveSuccess ? <Check size={12} /> : <FileText size={12} />}
+                      {saveSuccess ? 'Saved!' : 'Save as Doc'}
+                    </button>
+                  )}
+                </div>
+                {outputContent ? (
+                  <div className="prose prose-invert prose-sm font-mono whitespace-pre-wrap leading-relaxed text-[#d4d4d4]">
+                    {outputContent}
+                  </div>
+                ) : (
+                  <div className="text-[#555] text-center mt-20">
+                    {activeTab === 'STORY' && "Paste code and click Generate to see the story."}
+                    {activeTab === 'DIAGRAM' && "Paste API route and click Generate to see the flow."}
+                    {activeTab === 'CONCEPT' && "Enter a concept to get a simplified explanation."}
+                  </div>
+                )}
+              </div>
+            </div>
+          )
+        }
+
+      </div >
+    </div >
   );
 };

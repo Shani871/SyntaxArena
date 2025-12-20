@@ -3,12 +3,35 @@ export interface ExecutionResult {
     error: string;
 }
 
+// Add Dashboard Types
+export interface ActivityData {
+    day: string;
+    current: number;
+    previous: number;
+}
+
+export interface DashboardStats {
+    username: string;
+    xp: number;
+    rank: number;
+    streak: number;
+    activityData: ActivityData[];
+    recentTutorials: string[];
+}
+
 export interface QuestionResult {
     title: string;
     description: string;
     examples: string[];
     starterCode: string;
     testHarness?: string; // Optional test harness code
+}
+
+export interface VisualizerStep {
+    step: number;
+    line: number;
+    description: string;
+    variables: Record<string, string>;
 }
 
 export interface AptitudeQuestion {
@@ -115,7 +138,7 @@ export const apiService = {
         }
     },
 
-    visualizeExecution: async (code: string, language: string): Promise<string | null> => {
+    visualizeExecution: async (code: string, language: string): Promise<VisualizerStep[] | null> => {
         try {
             const response = await fetch(`${API_BASE_URL}/visualize-execution`, {
                 method: 'POST',
@@ -131,7 +154,7 @@ export const apiService = {
             }
 
             const result = await response.json();
-            return result.visualization;
+            return result.steps || null; // Return list of steps
         } catch (error) {
             console.error("Execution visualization error", error);
             return null;
@@ -157,6 +180,17 @@ export const apiService = {
             return result.explanation;
         } catch (error) {
             console.error("Concept simplification error", error);
+            return null;
+        }
+    },
+
+    getDashboardStats: async (): Promise<DashboardStats | null> => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/dashboard/stats`);
+            if (!response.ok) throw new Error('Failed to fetch dashboard stats');
+            return await response.json();
+        } catch (error) {
+            console.error('Dashboard stats error:', error);
             return null;
         }
     }
