@@ -43,6 +43,7 @@ export enum GameMode {
   ASSESSMENT = 'ASSESSMENT',
   BATTLE = 'BATTLE',
   PRACTICE = 'PRACTICE',
+  ARENA = 'ARENA',
   VISUALIZER = 'VISUALIZER',
   DASHBOARD = 'DASHBOARD',
   LEADERBOARD = 'LEADERBOARD',
@@ -53,7 +54,8 @@ export enum GameMode {
   PROFILE = 'PROFILE',
   APTITUDE = 'APTITUDE',
   JOBS = 'JOBS',
-  SETTINGS = 'SETTINGS'
+  SETTINGS = 'SETTINGS',
+  RESUME_BUILDER = 'RESUME_BUILDER'
 }
 
 export interface VisualizerStep {

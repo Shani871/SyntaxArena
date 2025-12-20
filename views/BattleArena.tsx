@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Send, AlertTriangle, Flag, CheckCircle2, ChevronDown, ChevronUp, Terminal as TerminalIcon, FileText, Lightbulb, XCircle, Wifi, Zap, Timer, Code2, ChevronRight, User, RefreshCw, Target, BarChart2, Settings, Swords, Cpu } from 'lucide-react';
+import { Play, Send, AlertTriangle, Flag, CheckCircle2, ChevronDown, ChevronUp, Terminal as TerminalIcon, FileText, Lightbulb, XCircle, Wifi, Zap, Timer, Code2, ChevronRight, User, RefreshCw, Target, BarChart2, Settings, Swords, Cpu, Trophy, Clock, Upload, Shield } from 'lucide-react';
 import { Problem, BattleState, ChatMessage, GameMode } from '../types';
 import { SAMPLE_PROBLEMS, MOCK_USER } from '../constants';
 import { CodeEditor } from '../components/CodeEditor';
 import { generateProblemVariant, getInvigilatorHint } from '../services/geminiService';
-import { apiService } from '../services/apiService';
+import { apiService, ValidationResult } from '../services/apiService';
+import { useProctoring } from '../hooks/useProctoring';
+import { ProctoringCamera } from '../components/ProctoringCamera';
+import { ProctoringSetup } from '../components/ProctoringSetup';
 
 interface BattleArenaProps {
     mode?: GameMode;
@@ -26,6 +29,11 @@ export const BattleArena: React.FC<BattleArenaProps> = ({ mode = GameMode.BATTLE
     const [activeBottomTab, setActiveBottomTab] = useState<'CONSOLE' | 'TESTS'>('CONSOLE');
     const [isConsoleOpen, setIsConsoleOpen] = useState(true);
     const [testResults, setTestResults] = useState<{ id: number; input: string; expected: string; actual: string; passed: boolean }[]>([]);
+
+    // Validation & Result Modal State
+    const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
+    const [showResultModal, setShowResultModal] = useState<'WIN' | 'LOSE' | 'TIMEOUT' | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Hint Menu State
     const [showHintMenu, setShowHintMenu] = useState(false);
@@ -50,6 +58,24 @@ export const BattleArena: React.FC<BattleArenaProps> = ({ mode = GameMode.BATTLE
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [inputMessage, setInputMessage] = useState("");
     const chatEndRef = useRef<HTMLDivElement>(null);
+
+    // Proctoring State
+    const [showProctoringSetup, setShowProctoringSetup] = useState(mode === GameMode.BATTLE || mode === GameMode.ASSESSMENT);
+    const [proctoringEnabled, setProctoringEnabled] = useState(false);
+
+    const proctoring = useProctoring({
+        onViolation: (count, reason) => {
+            setMessages(prev => [...prev, {
+                role: 'model',
+                text: `⚠️ PROCTORING VIOLATION (${count}/4): ${reason === 'NO_FACE' ? 'No face detected' : 'Multiple faces detected'}. Please ensure only you are visible.`
+            }]);
+        },
+        onDisqualified: () => {
+            setShowResultModal('DISQUALIFIED' as any);
+            setBattle(prev => ({ ...prev, isActive: false }));
+        },
+        maxViolations: 4,
+    });
 
     // Initialize Practice or Matchmaking Sequence
     useEffect(() => {
@@ -175,6 +201,23 @@ export const BattleArena: React.FC<BattleArenaProps> = ({ mode = GameMode.BATTLE
         return () => clearInterval(interval);
     }, [battle.isActive, mode]);
 
+    // Timer expiry and opponent win check
+    useEffect(() => {
+        if (showResultModal) return; // Already showing a result
+
+        // Check for timeout
+        if (battle.timeLeft === 0 && !validationResult?.allPassed) {
+            setShowResultModal('TIMEOUT');
+            setBattle(prev => ({ ...prev, isActive: false }));
+        }
+
+        // Check for opponent win (in Battle mode)
+        if (mode === GameMode.BATTLE && battle.opponentProgress >= 100 && !validationResult?.allPassed) {
+            setShowResultModal('LOSE');
+            setBattle(prev => ({ ...prev, isActive: false }));
+        }
+    }, [battle.timeLeft, battle.opponentProgress, validationResult, mode, showResultModal]);
+
     // Scroll chat to bottom - FIX: Use 'nearest' block to prevent whole page jump
     useEffect(() => {
         if (isConsoleOpen) {
@@ -286,6 +329,59 @@ export const BattleArena: React.FC<BattleArenaProps> = ({ mode = GameMode.BATTLE
         } else if (result.error) {
             setActiveBottomTab('CONSOLE');
             setMessages(prev => [...prev, { role: 'model', text: `>> ERROR:\n${result.error}` }]);
+        }
+    };
+
+    // Submit solution for validation
+    const handleSubmitSolution = async () => {
+        setIsSubmitting(true);
+        setMessages(prev => [...prev, { role: 'user', text: '>> SUBMITTING SOLUTION FOR VALIDATION...' }]);
+        setPracticeStats(prev => ({ ...prev, attempts: prev.attempts + 1 }));
+
+        const result = await apiService.validateSolution(
+            code,
+            selectedLanguage,
+            problem.generatedStory || problem.baseDescription
+        );
+
+        setIsSubmitting(false);
+        setIsConsoleOpen(true);
+        setActiveBottomTab('TESTS');
+
+        if (result) {
+            setValidationResult(result);
+
+            // Convert to test results format
+            const formattedResults = result.results.map((r, idx) => ({
+                id: r.testNumber || idx + 1,
+                input: r.input,
+                expected: r.expected,
+                actual: r.actual,
+                passed: r.passed
+            }));
+            setTestResults(formattedResults);
+
+            // Update progress
+            const progressPercent = (result.passedCount / result.totalCount) * 100;
+            setBattle(prev => ({ ...prev, myProgress: progressPercent }));
+
+            // Show feedback in console
+            setMessages(prev => [...prev, {
+                role: 'model',
+                text: `>> VALIDATION COMPLETE\n>> Tests Passed: ${result.passedCount}/${result.totalCount}\n>> ${result.feedback}`
+            }]);
+
+            // Check for win
+            if (result.allPassed) {
+                setShowResultModal('WIN');
+                setPracticeStats(prev => ({ ...prev, solved: prev.solved + 1 }));
+                setBattle(prev => ({ ...prev, isActive: false }));
+                // Award XP
+                const xpReward = problem.difficulty === 'Hard' ? 150 : problem.difficulty === 'Medium' ? 100 : 50;
+                setCurrentXp(prev => prev + xpReward);
+            }
+        } else {
+            setMessages(prev => [...prev, { role: 'model', text: '>> ERROR: Validation service unavailable. Please try again.' }]);
         }
     };
 
@@ -439,9 +535,22 @@ export const BattleArena: React.FC<BattleArenaProps> = ({ mode = GameMode.BATTLE
 
                     <button
                         onClick={handleSubmit}
-                        className="flex items-center gap-2 px-4 py-1.5 bg-green-700 hover:bg-green-600 text-white rounded text-xs font-bold transition-colors"
+                        disabled={isLoading}
+                        className="flex items-center gap-2 px-4 py-1.5 bg-green-700 hover:bg-green-600 text-white rounded text-xs font-bold transition-colors disabled:opacity-50"
                     >
                         <Play size={14} fill="currentColor" /> <span className="hidden sm:inline">Run</span>
+                    </button>
+
+                    <button
+                        onClick={handleSubmitSolution}
+                        disabled={isSubmitting}
+                        className="flex items-center gap-2 px-4 py-1.5 bg-cyber-purple hover:bg-purple-600 text-white rounded text-xs font-bold transition-colors shadow-[0_0_10px_rgba(139,92,246,0.3)] disabled:opacity-50"
+                    >
+                        {isSubmitting ? (
+                            <><div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> <span className="hidden sm:inline">Validating...</span></>
+                        ) : (
+                            <><Upload size={14} /> <span className="hidden sm:inline">Submit</span></>
+                        )}
                     </button>
                 </div>
             </div>
@@ -715,6 +824,183 @@ export const BattleArena: React.FC<BattleArenaProps> = ({ mode = GameMode.BATTLE
                                 className="px-4 py-2 bg-cyber-blue text-white text-xs font-bold rounded"
                             >
                                 CONFIRM
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Result Modal (Win/Lose/Timeout) */}
+            {showResultModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md">
+                    <div className={`relative p-8 rounded-2xl shadow-2xl max-w-md w-full text-center animate-fade-in ${showResultModal === 'WIN'
+                        ? 'bg-gradient-to-br from-[#1a1a2e] to-[#0f3d0f] border border-green-500/30'
+                        : showResultModal === 'TIMEOUT'
+                            ? 'bg-gradient-to-br from-[#1a1a2e] to-[#3d2e0f] border border-yellow-500/30'
+                            : 'bg-gradient-to-br from-[#1a1a2e] to-[#3d0f0f] border border-red-500/30'
+                        }`}>
+                        {/* Glow effect */}
+                        <div className={`absolute inset-0 rounded-2xl opacity-20 blur-xl ${showResultModal === 'WIN' ? 'bg-green-500' : showResultModal === 'TIMEOUT' ? 'bg-yellow-500' : 'bg-red-500'
+                            }`}></div>
+
+                        <div className="relative z-10">
+                            {/* Icon */}
+                            <div className={`w-24 h-24 mx-auto mb-6 rounded-full flex items-center justify-center ${showResultModal === 'WIN'
+                                ? 'bg-green-500/20 shadow-[0_0_30px_rgba(34,197,94,0.5)]'
+                                : showResultModal === 'TIMEOUT'
+                                    ? 'bg-yellow-500/20 shadow-[0_0_30px_rgba(234,179,8,0.5)]'
+                                    : 'bg-red-500/20 shadow-[0_0_30px_rgba(239,68,68,0.5)]'
+                                }`}>
+                                {showResultModal === 'WIN' && <Trophy size={48} className="text-green-400" />}
+                                {showResultModal === 'TIMEOUT' && <Clock size={48} className="text-yellow-400" />}
+                                {showResultModal === 'LOSE' && <XCircle size={48} className="text-red-400" />}
+                            </div>
+
+                            {/* Title */}
+                            <h2 className={`text-3xl font-black mb-2 ${showResultModal === 'WIN' ? 'text-green-400' : showResultModal === 'TIMEOUT' ? 'text-yellow-400' : 'text-red-400'
+                                }`}>
+                                {showResultModal === 'WIN' && 'VICTORY!'}
+                                {showResultModal === 'TIMEOUT' && "TIME'S UP!"}
+                                {showResultModal === 'LOSE' && 'DEFEATED'}
+                            </h2>
+
+                            {/* Subtitle */}
+                            <p className="text-gray-400 mb-6">
+                                {showResultModal === 'WIN' && 'All test cases passed! Great work!'}
+                                {showResultModal === 'TIMEOUT' && 'The clock ran out before you could solve it.'}
+                                {showResultModal === 'LOSE' && 'Your opponent solved it first.'}
+                            </p>
+
+                            {/* Stats */}
+                            <div className="grid grid-cols-3 gap-4 mb-6">
+                                <div className="bg-[#1e1e1e] rounded-lg p-3">
+                                    <div className="text-2xl font-bold text-white">
+                                        {validationResult ? `${validationResult.passedCount}/${validationResult.totalCount}` : '0/0'}
+                                    </div>
+                                    <div className="text-[10px] text-gray-500 uppercase">Tests Passed</div>
+                                </div>
+                                <div className="bg-[#1e1e1e] rounded-lg p-3">
+                                    <div className="text-2xl font-bold text-white">
+                                        {Math.floor((900 - battle.timeLeft) / 60)}:{String((900 - battle.timeLeft) % 60).padStart(2, '0')}
+                                    </div>
+                                    <div className="text-[10px] text-gray-500 uppercase">Time Used</div>
+                                </div>
+                                <div className="bg-[#1e1e1e] rounded-lg p-3">
+                                    <div className={`text-2xl font-bold ${showResultModal === 'WIN' ? 'text-green-400' : 'text-gray-400'}`}>
+                                        {showResultModal === 'WIN' ? `+${problem.difficulty === 'Hard' ? 150 : problem.difficulty === 'Medium' ? 100 : 50}` : '+0'}
+                                    </div>
+                                    <div className="text-[10px] text-gray-500 uppercase">XP Earned</div>
+                                </div>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex gap-3 justify-center">
+                                <button
+                                    onClick={() => {
+                                        setShowResultModal(null);
+                                        setValidationResult(null);
+                                        setTestResults([]);
+                                        setBattle(prev => ({ ...prev, isActive: true, timeLeft: 900, myProgress: 0, opponentProgress: 0 }));
+                                    }}
+                                    className="px-6 py-2.5 bg-[#27272a] hover:bg-[#333] text-white text-sm font-bold rounded-lg transition-colors"
+                                >
+                                    Try Again
+                                </button>
+                                {mode === GameMode.PRACTICE && (
+                                    <button
+                                        onClick={() => {
+                                            setShowResultModal(null);
+                                            loadPracticeProblem(practiceDifficulty);
+                                        }}
+                                        className="px-6 py-2.5 bg-cyber-purple hover:bg-purple-600 text-white text-sm font-bold rounded-lg transition-colors shadow-[0_0_15px_rgba(139,92,246,0.3)]"
+                                    >
+                                        Next Problem
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Proctoring Setup Modal - MANDATORY for Battle/Arena */}
+            {showProctoringSetup && (mode === GameMode.BATTLE || mode === GameMode.ASSESSMENT) && (
+                <ProctoringSetup
+                    onReady={() => {
+                        setShowProctoringSetup(false);
+                        setProctoringEnabled(true);
+                    }}
+                    onCancel={() => {
+                        // Redirect back to home - cannot bypass proctoring
+                        window.location.href = '/';
+                    }}
+                    onVideoRef={proctoring.attachVideoStream}
+                    startProctoring={proctoring.startProctoring}
+                    hasPermission={proctoring.hasPermission}
+                    faceCount={proctoring.faceCount}
+                    status={proctoring.status}
+                    errorMessage={proctoring.errorMessage}
+                />
+            )}
+
+            {/* Block battle UI if proctoring not enabled for Battle/Arena modes */}
+            {(mode === GameMode.BATTLE || mode === GameMode.ASSESSMENT) && !proctoringEnabled && (
+                <div className="fixed inset-0 z-50 bg-black flex items-center justify-center">
+                    <div className="text-center">
+                        <Shield size={64} className="text-gray-600 mx-auto mb-4" />
+                        <p className="text-gray-400 text-lg">Waiting for proctoring setup...</p>
+                    </div>
+                </div>
+            )}
+
+            {/* Proctoring Camera (when active) */}
+            {proctoringEnabled && proctoring.isEnabled && !showProctoringSetup && (
+                <ProctoringCamera
+                    faceCount={proctoring.faceCount}
+                    violations={proctoring.violations}
+                    maxViolations={proctoring.maxViolations}
+                    status={proctoring.status}
+                    onVideoRef={proctoring.attachVideoStream}
+                />
+            )}
+
+            {/* Disqualified Modal */}
+            {(showResultModal as string) === 'DISQUALIFIED' && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md">
+                    <div className="relative p-8 rounded-2xl shadow-2xl max-w-md w-full text-center bg-gradient-to-br from-[#1a1a2e] to-[#3d0f0f] border border-red-500/30">
+                        <div className="absolute inset-0 rounded-2xl opacity-20 blur-xl bg-red-500"></div>
+
+                        <div className="relative z-10">
+                            <div className="w-24 h-24 mx-auto mb-6 rounded-full flex items-center justify-center bg-red-500/20 shadow-[0_0_30px_rgba(239,68,68,0.5)]">
+                                <Shield size={48} className="text-red-400" />
+                            </div>
+
+                            <h2 className="text-3xl font-black mb-2 text-red-400">DISQUALIFIED</h2>
+
+                            <p className="text-gray-400 mb-6">
+                                You have been disqualified due to multiple proctoring violations.
+                            </p>
+
+                            <div className="bg-[#1e1e1e] rounded-lg p-4 mb-6 text-left">
+                                <p className="text-sm text-gray-400">
+                                    <span className="text-red-400 font-bold">Violations:</span> {proctoring.violations}/{proctoring.maxViolations}
+                                </p>
+                                <p className="text-sm text-gray-500 mt-2">
+                                    • This battle will not count<br />
+                                    • No XP will be awarded<br />
+                                    • Rating unaffected
+                                </p>
+                            </div>
+
+                            <button
+                                onClick={() => {
+                                    setShowResultModal(null);
+                                    proctoring.stopProctoring();
+                                    setProctoringEnabled(false);
+                                }}
+                                className="px-8 py-3 bg-[#27272a] hover:bg-[#333] text-white text-sm font-bold rounded-xl transition-colors"
+                            >
+                                Return to Home
                             </button>
                         </div>
                     </div>

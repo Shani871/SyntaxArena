@@ -1,36 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { MOCK_USER } from '../constants';
-import { TodoItem } from '../types';
+import { TodoItem, GameMode } from '../types';
 import { Trophy, Flame, Target, CheckSquare, Plus, Trash2, Book, Code, ArrowUpRight, Sparkles, Zap } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 
-import { apiService, DashboardStats } from '../services/apiService';
-
 interface DashboardProps {
-    // toggleBlackhole?: () => void;
+    setMode?: (mode: GameMode) => void;
 }
 
-export const Dashboard: React.FC<DashboardProps> = () => {
-    const [stats, setStats] = useState<DashboardStats | null>(null);
-    const [loading, setLoading] = useState(true);
+export const Dashboard: React.FC<DashboardProps> = ({ setMode }) => {
     const [todos, setTodos] = useState<TodoItem[]>([
         { id: '1', text: 'Master REST API concepts', completed: true },
         { id: '2', text: 'Visualize JWT flow', completed: false },
         { id: '3', text: 'Complete DB Indexing tutorial', completed: false },
     ]);
     const [newTodo, setNewTodo] = useState('');
-
-    useEffect(() => {
-        const fetchStats = async () => {
-            const data = await apiService.getDashboardStats();
-            if (data) setStats(data);
-            setLoading(false);
-        };
-        fetchStats();
-        // Poll every 5s for "real-time" feel
-        const interval = setInterval(fetchStats, 5000);
-        return () => clearInterval(interval);
-    }, []);
 
     const handleAddTodo = () => {
         if (!newTodo.trim()) return;
@@ -46,14 +30,14 @@ export const Dashboard: React.FC<DashboardProps> = () => {
         setTodos(todos.filter(t => t.id !== id));
     };
 
-    const activityData = stats?.activityData || [
-        { day: 'Mon', current: 0, previous: 0 },
-        { day: 'Tue', current: 0, previous: 0 },
-        { day: 'Wed', current: 0, previous: 0 },
-        { day: 'Thu', current: 0, previous: 0 },
-        { day: 'Fri', current: 0, previous: 0 },
-        { day: 'Sat', current: 0, previous: 0 },
-        { day: 'Sun', current: 0, previous: 0 },
+    const activityData = [
+        { day: 'Mon', current: 12, previous: 8 },
+        { day: 'Tue', current: 18, previous: 10 },
+        { day: 'Wed', current: 15, previous: 12 },
+        { day: 'Thu', current: 25, previous: 15 },
+        { day: 'Fri', current: 20, previous: 18 },
+        { day: 'Sat', current: 32, previous: 22 },
+        { day: 'Sun', current: 28, previous: 14 },
     ];
 
     const CustomTooltip = ({ active, payload, label }: any) => {
@@ -88,24 +72,29 @@ export const Dashboard: React.FC<DashboardProps> = () => {
                         <div className="flex items-center gap-6">
                             <div className="relative group cursor-pointer">
                                 <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-2xl font-bold text-white shadow-lg shadow-blue-900/20 group-hover:scale-105 transition-transform ring-4 ring-[#252526]">
-                                    {stats?.username.slice(0, 2).toUpperCase() || "GU"}
+                                    {MOCK_USER.username.slice(0, 2).toUpperCase()}
                                 </div>
-                                <div className={`absolute -bottom-1 -right-1 w-5 h-5 border-4 border-[#1e1e1e] rounded-full ${loading ? 'bg-yellow-500' : 'bg-green-500 animate-pulse'}`}></div>
+                                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-4 border-[#1e1e1e] rounded-full animate-pulse"></div>
                             </div>
                             <div>
                                 <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-2">
-                                    Welcome back, {stats?.username || "Guest"} <Sparkles size={18} className="text-yellow-400 animate-pulse" />
+                                    Welcome back, {MOCK_USER.username} <Sparkles size={18} className="text-yellow-400 animate-pulse" />
                                 </h1>
                                 <div className="flex items-center gap-3 mt-1 text-[#858585]">
-                                    <span className="bg-[#333] px-2 py-0.5 rounded text-[10px] uppercase font-bold text-white border border-[#444]">Lvl {Math.floor((stats?.xp || 0) / 1000)} Architect</span>
+                                    <span className="bg-[#333] px-2 py-0.5 rounded text-[10px] uppercase font-bold text-white border border-[#444]">Lvl 12 Architect</span>
                                     <span>•</span>
-                                    <span className="text-cyber-blue font-bold">{(stats?.xp || 0).toLocaleString()} XP</span>
+                                    <span className="text-cyber-blue font-bold">{MOCK_USER.xp.toLocaleString()} XP</span>
                                 </div>
                             </div>
                         </div>
                         <div className="flex gap-3 w-full md:w-auto">
                             <button className="px-4 py-2 bg-[#252526] hover:bg-[#333] border border-[#333] text-white rounded text-xs transition-colors flex-1 md:flex-initial font-bold">Edit Profile</button>
-                            <button className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white rounded text-xs font-bold transition-all shadow-lg shadow-blue-900/20 hover:-translate-y-0.5 transform flex-1 md:flex-initial">Resume Builder</button>
+                            <button
+                                onClick={() => setMode?.(GameMode.RESUME_BUILDER)}
+                                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white rounded text-xs font-bold transition-all shadow-lg shadow-blue-900/20 hover:-translate-y-0.5 transform flex-1 md:flex-initial"
+                            >
+                                Resume Builder
+                            </button>
                         </div>
                     </div>
 
@@ -116,7 +105,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
                             <div className="p-4 bg-[#1e1e1e] text-cyber-purple rounded-xl flex items-center justify-center h-16 w-16 shrink-0 border border-[#333] shadow-inner group-hover:scale-110 transition-transform"><Trophy size={28} /></div>
                             <div className="relative z-10">
                                 <div className="text-[#858585] text-[10px] uppercase tracking-wider font-bold mb-1">Global Rank</div>
-                                <div className="text-3xl font-black text-white">#{stats?.rank || "-"} <span className="text-xs text-green-500 font-bold ml-2 bg-green-900/20 px-1.5 py-0.5 rounded border border-green-900/30">▲ 3</span></div>
+                                <div className="text-3xl font-black text-white">#42 <span className="text-xs text-green-500 font-bold ml-2 bg-green-900/20 px-1.5 py-0.5 rounded border border-green-900/30">▲ 3</span></div>
                             </div>
                         </div>
                         <div className="bg-[#252526] p-6 rounded-xl border border-[#333] flex items-center gap-5 hover:border-[#555] transition-all hover:-translate-y-1 shadow-lg h-full group relative overflow-hidden">
@@ -124,7 +113,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
                             <div className="p-4 bg-[#1e1e1e] text-cyber-danger rounded-xl flex items-center justify-center h-16 w-16 shrink-0 border border-[#333] shadow-inner group-hover:scale-110 transition-transform"><Flame size={28} /></div>
                             <div className="relative z-10">
                                 <div className="text-[#858585] text-[10px] uppercase tracking-wider font-bold mb-1">Daily Streak</div>
-                                <div className="text-3xl font-black text-white">{stats?.streak || 0} <span className="text-xs text-[#666] font-bold">Days</span></div>
+                                <div className="text-3xl font-black text-white">{MOCK_USER.streak} <span className="text-xs text-[#666] font-bold">Days</span></div>
                             </div>
                         </div>
                         <div className="bg-[#252526] p-6 rounded-xl border border-[#333] flex items-center gap-5 hover:border-[#555] transition-all hover:-translate-y-1 shadow-lg h-full group relative overflow-hidden">
@@ -132,7 +121,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
                             <div className="p-4 bg-[#1e1e1e] text-cyber-blue rounded-xl flex items-center justify-center h-16 w-16 shrink-0 border border-[#333] shadow-inner group-hover:scale-110 transition-transform"><Target size={28} /></div>
                             <div className="relative z-10">
                                 <div className="text-[#858585] text-[10px] uppercase tracking-wider font-bold mb-1">Tutorials</div>
-                                <div className="text-3xl font-black text-white">{stats?.recentTutorials.length || 0} <span className="text-xs text-[#666] font-bold">Done</span></div>
+                                <div className="text-3xl font-black text-white">{MOCK_USER.tutorialsCompleted.length} <span className="text-xs text-[#666] font-bold">Done</span></div>
                             </div>
                         </div>
                     </div>
