@@ -85,7 +85,7 @@ function App() {
         );
       case GameMode.BATTLE:
       case GameMode.ASSESSMENT:
-        return <BattleArena key={mode} mode={mode} />;
+        return <BattleArena key={mode} mode={mode} setMode={setMode} />;
       case GameMode.PRACTICE:
         return <BattleArena key="practice" mode={GameMode.PRACTICE} />;
       case GameMode.ARENA:

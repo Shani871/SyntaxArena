@@ -28,6 +28,8 @@ export const MOCK_USER: User = {
   codingRating: 1620,
   streak: 12,
   xp: 12450,
+  level: 12,
+  rank: "Guardian",
   conceptsLearned: ["Variables", "Loops", "Recursion", "REST API", "HTTP"],
   tutorialsCompleted: ["Backend 101", "REST APIs Explained"]
 };

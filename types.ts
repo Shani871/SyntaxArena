@@ -1,4 +1,3 @@
-
 export interface User {
   id: string;
   username: string;
@@ -6,6 +5,8 @@ export interface User {
   codingRating: number;
   streak: number;
   xp: number;
+  level?: number;
+  rank?: string;
   conceptsLearned: string[];
   tutorialsCompleted: string[];
 }
@@ -61,6 +62,7 @@ export enum GameMode {
 export interface VisualizerStep {
   step: number;
   description: string;
+  line?: number | null;
   changedVariables: Record<string, string>;
 }
 

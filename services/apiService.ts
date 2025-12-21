@@ -8,6 +8,7 @@ export interface QuestionResult {
     description: string;
     examples: string[];
     starterCode: string;
+    testHarness?: string;
 }
 
 export interface AptitudeQuestion {
@@ -140,7 +141,7 @@ export const apiService = {
         }
     },
 
-    visualizeExecution: async (code: string, language: string, token?: string): Promise<AptitudeQuestion[] | any[] | null> => {
+    visualizeExecution: async (code: string, language: string, token?: string): Promise<any[] | string | null> => {
         try {
             const headers: Record<string, string> = {
                 'Content-Type': 'application/json',

@@ -80,36 +80,90 @@ export const Visualizer: React.FC = () => {
 
   const handleVisualize = async () => {
     setLoading(true);
-    const token = await user?.getIdToken();
-    const result = await apiService.visualizeExecution(code, language, token);
-    if (result) {
-      setSteps(result as any);
-      setCurrentStepIndex(0); // Start at step 0
+    try {
+      const token = await user?.getIdToken();
+      const result = await apiService.visualizeExecution(code, language, token);
+      if (result) {
+        if (Array.isArray(result)) {
+          setSteps(result as any);
+          setCurrentStepIndex(0); // Start at step 0
+        } else if (typeof result === 'string') {
+          // Fallback: Parse the AI response into individual steps if it's a string
+          const stepMatches = (result as string).match(/\*\*Step \d+[^*]*\*\*[^*]*/g) || [];
+
+          if (stepMatches.length > 0) {
+            const parsedSteps = stepMatches.map((stepText, index) => {
+              const lineMatch = stepText.match(/Line (\d+)/i);
+              const line = lineMatch ? parseInt(lineMatch[1]) : null;
+              let description = stepText
+                .replace(/\*\*Step \d+[^:]*:\*\*/g, '')
+                .replace(/\*\*/g, '')
+                .trim();
+              return {
+                step: index + 1,
+                description: description,
+                line: line,
+                changedVariables: {}
+              };
+            });
+            setSteps(parsedSteps);
+            setCurrentStepIndex(0);
+          } else {
+            const lines = (result as string).split('\n').filter(l => l.trim());
+            const parsedSteps = lines.map((line, index) => ({
+              step: index + 1,
+              description: line.replace(/^[\d+\.\-\*]\s*/, '').replace(/\*\*/g, ''),
+              line: null,
+              changedVariables: {}
+            }));
+            setSteps(parsedSteps.length > 0 ? parsedSteps : [{ step: 1, description: result as string, line: null, changedVariables: {} }]);
+            setCurrentStepIndex(0);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Visualization error:", error);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleExplainConcept = async () => {
     setContentLoading(true);
-    const token = await user?.getIdToken();
-    const result = await apiService.simplifyConcept(concept, language, difficulty, token);
-    setOutputContent(result || "Error generating explanation.");
-    setContentLoading(false);
+    try {
+      const token = await user?.getIdToken();
+      const result = await apiService.simplifyConcept(concept, language, difficulty, token);
+      setOutputContent(result || "Error generating explanation.");
+    } catch (error) {
+      console.error("Concept explanation error:", error);
+    } finally {
+      setContentLoading(false);
+    }
   };
 
   const handleGenerateStory = async () => {
     setContentLoading(true);
-    const token = await user?.getIdToken();
-    const result = await apiService.generateCodeStory(storyCode, language, token);
-    setOutputContent(result || "Error generating story.");
-    setContentLoading(false);
+    try {
+      const token = await user?.getIdToken();
+      const result = await apiService.generateCodeStory(storyCode, language, token);
+      setOutputContent(result || "Error generating story.");
+    } catch (error) {
+      console.error("Story generation error:", error);
+    } finally {
+      setContentLoading(false);
+    }
   };
 
   const handleGenerateDiagram = async () => {
     setContentLoading(true);
-    const result = await generateApiDiagram(apiCode);
-    setOutputContent(result);
-    setContentLoading(false);
+    try {
+      const result = await generateApiDiagram(apiCode);
+      setOutputContent(result);
+    } catch (error) {
+      console.error("Diagram generation error:", error);
+    } finally {
+      setContentLoading(false);
+    }
   };
 
   // Save AI output as a new document
@@ -246,22 +300,57 @@ export const Visualizer: React.FC = () => {
                 )}
               </div>
               {steps.length === 0 ? (
-                <div className="text-[#555] text-center mt-10">Run visualization to see steps.</div>
+                <div className="flex flex-col items-center justify-center text-center mt-20 text-[#555]">
+                  <Cpu size={48} className="mb-4 opacity-20" />
+                  <p className="text-sm">Run visualization to see step-by-step execution</p>
+                </div>
               ) : (
-                <div className="space-y-4">
-                  {steps.map((step, idx) => (
-                    <div key={idx} className="flex gap-4">
-                      <div className="w-6 h-6 rounded-full bg-[#333] text-white flex items-center justify-center text-xs font-bold shrink-0">{step.step}</div>
-                      <div>
-                        <p className="text-[#d4d4d4] mb-1">{step.description}</p>
-                        {Object.keys(step.changedVariables).length > 0 && (
-                          <div className="bg-[#252526] p-2 rounded text-xs text-[#9cdcfe] font-mono">
-                            {JSON.stringify(step.changedVariables).replace(/["{}"]/g, '').replace(/:/g, ' = ')}
-                          </div>
+                <div className="space-y-3">
+                  {/* Timeline connector */}
+                  <div className="relative">
+                    {steps.map((step, idx) => (
+                      <div key={idx} className="relative flex gap-4 group">
+                        {/* Vertical line connector */}
+                        {idx < steps.length - 1 && (
+                          <div className="absolute left-3 top-8 w-0.5 h-full bg-gradient-to-b from-cyber-purple/50 to-transparent" />
                         )}
+
+                        {/* Step number circle */}
+                        <div className="relative z-10 w-6 h-6 rounded-full bg-gradient-to-br from-cyber-purple to-purple-600 text-white flex items-center justify-center text-xs font-bold shrink-0 shadow-[0_0_15px_rgba(139,92,246,0.4)] group-hover:scale-110 transition-transform">
+                          {step.step}
+                        </div>
+
+                        {/* Step content card */}
+                        <div className="flex-1 bg-[#252526] border border-[#333] rounded-lg p-4 hover:border-cyber-purple/50 transition-all duration-300 group-hover:shadow-[0_0_20px_rgba(139,92,246,0.15)] group-hover:-translate-y-0.5">
+                          {/* Line number badge */}
+                          {(step as any).line && (
+                            <div className="inline-block px-2 py-1 bg-[#1e1e1e] border border-cyber-blue/30 rounded text-xs text-cyber-blue font-mono mb-2">
+                              Line {(step as any).line}
+                            </div>
+                          )}
+
+                          {/* Description */}
+                          <p className="text-[#d4d4d4] text-sm leading-relaxed mb-2">{step.description}</p>
+
+                          {/* Variables changed */}
+                          {Object.keys(step.changedVariables).length > 0 && (
+                            <div className="bg-[#1e1e1e] border border-[#444] p-3 rounded text-xs font-mono mt-3">
+                              <div className="text-[#858585] uppercase text-[10px] font-bold mb-2">Variables</div>
+                              <div className="space-y-1">
+                                {Object.entries(step.changedVariables).map(([key, value]) => (
+                                  <div key={key} className="flex gap-2">
+                                    <span className="text-[#4EC9B0]">{key}</span>
+                                    <span className="text-[#555]">=</span>
+                                    <span className="text-[#CE9178]">{JSON.stringify(value)}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

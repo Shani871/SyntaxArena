@@ -62,13 +62,14 @@ export const AptitudeTest: React.FC = () => {
             // Get ID token for authenticated request
             const token = await user?.getIdToken();
 
-            // Fetch AI-generated questions
-            const result = await apiService.generateAptitudeQuestions(topic.id, 3, token);
+            // Fetch AI-generated questions (5 for better variety)
+            const result = await apiService.generateAptitudeQuestions(topic.id, 5, token);
             if (result && result.questions && result.questions.length > 0) {
                 setQuestions(result.questions);
                 setView('QUIZ');
             } else {
                 console.error('Failed to load questions: Empty result');
+                alert('Failed to generate questions. Please try again.');
                 setView('TOPICS');
             }
         } catch (error) {
@@ -106,8 +107,10 @@ export const AptitudeTest: React.FC = () => {
     const reset = () => {
         setView('TOPICS');
         setActiveTopic(null);
+        setQuestions([]);  // Clear questions array
         setCurrentQuestionIndex(0);
         setUserAnswers({});
+        setScore(0);  // Reset score
     };
 
     // ------------------------------------------------------------------

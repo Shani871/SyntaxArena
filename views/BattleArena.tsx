@@ -12,9 +12,10 @@ import { useAuth } from '../components/AuthContext';
 
 interface BattleArenaProps {
     mode?: GameMode;
+    setMode?: (mode: GameMode) => void;
 }
 
-export const BattleArena: React.FC<BattleArenaProps> = ({ mode = GameMode.BATTLE }) => {
+export const BattleArena: React.FC<BattleArenaProps> = ({ mode = GameMode.BATTLE, setMode }) => {
     const { user } = useAuth();
     const [matchState, setMatchState] = useState<'SEARCHING' | 'FOUND' | 'BATTLE'>('SEARCHING');
     const [problem, setProblem] = useState<Problem>(SAMPLE_PROBLEMS[0]);
@@ -74,7 +75,10 @@ export const BattleArena: React.FC<BattleArenaProps> = ({ mode = GameMode.BATTLE
             }]);
         },
         onDisqualified: () => {
-            setShowResultModal('DISQUALIFIED' as any);
+            // Redirect to home instead of showing modal
+            if (setMode) {
+                setMode(GameMode.HOME);
+            }
             setBattle(prev => ({ ...prev, isActive: false }));
         },
         maxViolations: 4,

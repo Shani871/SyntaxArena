@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Send, MessageSquare, Loader2, GripHorizontal, Sparkles, ThumbsUp, ThumbsDown, Minimize2, Maximize2, Copy, Check, Bot, User as UserIcon } from 'lucide-react';
+import { Send, X, Minimize2, Maximize2, ThumbsUp, ThumbsDown, Copy, RefreshCw, Upload, Sparkles, Check, Orbit, Bot, User as UserIcon, Loader2, GripHorizontal, MessageSquare } from 'lucide-react';
 import { chatWithBlackhole } from '../services/geminiService';
 import { ChatMessage } from '../types';
 import { useAuth } from './AuthContext';
@@ -130,7 +130,7 @@ export const Blackhole: React.FC<BlackholeProps> = ({ onClose }) => {
             >
                 <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center shadow-[0_0_20px_rgba(139,92,246,0.6)] animate-glow-pulse">
-                        <Sparkles size={16} className="text-white" />
+                        <Orbit size={16} className="text-white animate-spin" style={{ animationDuration: '8s' }} />
                     </div>
                     <div>
                         <div className="flex items-center gap-2 text-white font-bold text-sm">

@@ -1,6 +1,6 @@
 import React from 'react';
 import { GameMode } from '../types';
-import { Sword, BookOpen, Settings, User, BarChart2, LayoutDashboard, Share2, FileText, GraduationCap, Terminal, BrainCircuit, Briefcase, Code, Swords } from 'lucide-react';
+import { Sword, BookOpen, Settings, User, BarChart2, LayoutDashboard, Share2, FileText, GraduationCap, Terminal, BrainCircuit, Briefcase, Code, Swords, Boxes } from 'lucide-react';
 
 interface NavbarProps {
   currentMode: GameMode;
@@ -18,7 +18,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentMode, setMode }) => {
     { mode: GameMode.JOBS, icon: <Briefcase size={24} />, label: "Jobs" },
     { mode: GameMode.RESUME_BUILDER, icon: <FileText size={24} />, label: "Resume" },
     { mode: GameMode.VISUALIZER, icon: <BookOpen size={24} />, label: "Visualizer" },
-    { mode: GameMode.PLAYGROUND, icon: <Share2 size={24} />, label: "Playground" },
+    { mode: GameMode.PLAYGROUND, icon: <Boxes size={24} />, label: "Playground" },
     { mode: GameMode.TUTORIALS, icon: <GraduationCap size={24} />, label: "Tutorials" },
     { mode: GameMode.DOCS, icon: <FileText size={24} />, label: "Docs" },
     { mode: GameMode.LEADERBOARD, icon: <BarChart2 size={24} />, label: "Leaderboard" },
@@ -27,7 +27,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentMode, setMode }) => {
   ];
 
   return (
-    <nav className="w-full h-16 bg-[#0f0f10] border-t border-[#1e1e1e] shrink-0 flex flex-row justify-between items-center md:h-full md:w-20 md:flex-col md:justify-start md:border-t-0 md:border-r md:bg-[#0f0f10] z-50">
+    <nav className="w-full h-16 bg-[#0a0a0b] border-t border-white/5 shrink-0 flex flex-row justify-between items-center md:h-full md:w-20 md:flex-col md:justify-start md:border-t-0 md:border-r md:bg-[#0a0a0b] z-50 transition-colors duration-500">
 
       {/* Top Section / Logo (Desktop) */}
       <div className="hidden md:flex flex-col items-center pt-6 pb-4 shrink-0">

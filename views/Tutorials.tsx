@@ -1,5 +1,5 @@
 import React from 'react';
-import { Book, ChevronRight, Lock, CheckCircle } from 'lucide-react';
+import { Book, ChevronRight, Lock, CheckCircle, ExternalLink } from 'lucide-react';
 
 const TUTORIALS_LIST = [
     { id: 1, title: "Backend 101: What is a Server?", category: "Fundamentals", completed: true },
@@ -41,9 +41,14 @@ export const Tutorials: React.FC = () => {
 
                                 <div className="flex items-center justify-between mt-6 pt-4 border-t border-[#333]">
                                     <span className="text-[#858585] text-xs">15 mins</span>
-                                    <div className="flex items-center text-xs text-[#ccc] font-bold group-hover:text-cyber-blue transition-colors">
+                                    <a
+                                        href="https://grow.google/intl/en_in/certificates/"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center text-xs text-[#ccc] font-bold group-hover:text-cyber-blue transition-colors outline-none"
+                                    >
                                         Start <ChevronRight size={14} className="ml-1 group-hover:translate-x-1 transition-transform" />
-                                    </div>
+                                    </a>
                                 </div>
                             </div>
                         ))}
