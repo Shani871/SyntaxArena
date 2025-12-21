@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
+import { useAuth } from '../components/AuthContext';
 import { MOCK_USER } from '../constants';
-import { TodoItem, GameMode } from '../types';
-import { Trophy, Flame, Target, CheckSquare, Plus, Trash2, Book, Code, ArrowUpRight, Sparkles, Zap } from 'lucide-react';
+import { TodoItem, GameMode, ScheduledBattle } from '../types';
+import { Trophy, Flame, Target, CheckSquare, Plus, Trash2, Book, Code, ArrowUpRight, Sparkles, Zap, Calendar, Clock as ClockIcon } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 
 interface DashboardProps {
     setMode?: (mode: GameMode) => void;
+    scheduledBattles?: ScheduledBattle[];
+    onRemoveBattle?: (id: string) => void;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ setMode }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ setMode, scheduledBattles = [], onRemoveBattle }) => {
+    const { user } = useAuth();
     const [todos, setTodos] = useState<TodoItem[]>([
         { id: '1', text: 'Master REST API concepts', completed: true },
         { id: '2', text: 'Visualize JWT flow', completed: false },
@@ -71,14 +75,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ setMode }) => {
                     <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-2">
                         <div className="flex items-center gap-6">
                             <div className="relative group cursor-pointer">
-                                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-2xl font-bold text-white shadow-lg shadow-blue-900/20 group-hover:scale-105 transition-transform ring-4 ring-[#252526]">
-                                    {MOCK_USER.username.slice(0, 2).toUpperCase()}
+                                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-2xl font-bold text-white shadow-lg shadow-blue-900/20 group-hover:scale-105 transition-transform ring-4 ring-[#252526] overflow-hidden">
+                                    {user?.photoURL ? (
+                                        <img src={user.photoURL} alt={user.displayName || 'User'} className="w-full h-full object-cover" />
+                                    ) : (
+                                        (user?.displayName || user?.email?.split('@')[0] || MOCK_USER.username).slice(0, 2).toUpperCase()
+                                    )}
                                 </div>
                                 <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-4 border-[#1e1e1e] rounded-full animate-pulse"></div>
                             </div>
                             <div>
                                 <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-2">
-                                    Welcome back, {MOCK_USER.username} <Sparkles size={18} className="text-yellow-400 animate-pulse" />
+                                    Welcome back, {user?.displayName || user?.email?.split('@')[0] || MOCK_USER.username} <Sparkles size={18} className="text-yellow-400 animate-pulse" />
                                 </h1>
                                 <div className="flex items-center gap-3 mt-1 text-[#858585]">
                                     <span className="bg-[#333] px-2 py-0.5 rounded text-[10px] uppercase font-bold text-white border border-[#444]">Lvl 12 Architect</span>
@@ -225,6 +233,56 @@ export const Dashboard: React.FC<DashboardProps> = ({ setMode }) => {
                                         <Plus size={18} />
                                     </button>
                                 </div>
+                            </div>
+                        </div>
+
+                        {/* Scheduled Battles */}
+                        <div className="bg-[#252526] rounded-xl border border-[#333] flex flex-col overflow-hidden shadow-lg h-full min-h-[320px]">
+                            <div className="p-5 border-b border-[#333] flex justify-between items-center bg-[#2d2d2d]/50 backdrop-blur-sm">
+                                <h2 className="font-bold text-white flex items-center gap-2">
+                                    <Calendar size={18} className="text-cyber-purple" /> Scheduled Battles
+                                </h2>
+                                <span className="text-[10px] font-bold bg-[#333] px-2 py-1 rounded text-white border border-[#444]">{scheduledBattles.length} SCHEDULED</span>
+                            </div>
+                            <div className="flex-1 p-4 overflow-y-auto space-y-3">
+                                {scheduledBattles.map(battle => (
+                                    <div key={battle.id} className="p-4 glass-effect hover:bg-[#2a2a2a]/70 border border-[#333] rounded-xl transition-all duration-300 group shadow-sm hover:border-cyber-purple/30 hover:-translate-y-1 relative overflow-hidden">
+                                        <div className="absolute top-0 left-0 w-1 h-full bg-cyber-purple opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                                        <div className="flex justify-between items-start mb-2">
+                                            <div className="flex flex-col">
+                                                <span className="text-xs font-bold text-[#858585] uppercase tracking-wider mb-1">vs {battle.opponent}</span>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="flex items-center gap-1.5 text-white">
+                                                        <Calendar size={14} className="text-cyber-purple" />
+                                                        <span className="text-xs font-bold">{battle.date}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5 text-white">
+                                                        <ClockIcon size={14} className="text-cyber-purple" />
+                                                        <span className="text-xs font-bold">{battle.time}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => onRemoveBattle?.(battle.id)}
+                                                className="text-[#555] hover:text-red-400 p-1 transition-colors"
+                                                title="Cancel Battle"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                        <div className="mt-3 flex justify-end">
+                                            <button className="text-[10px] font-bold uppercase tracking-widest text-cyber-purple hover:text-white transition-colors flex items-center gap-1">
+                                                Prepare <ArrowUpRight size={10} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                                {scheduledBattles.length === 0 && (
+                                    <div className="h-full flex flex-col items-center justify-center text-[#555] py-12">
+                                        <Calendar size={32} className="mb-3 opacity-20" />
+                                        <p className="text-xs text-center px-6">No battles scheduled. Go to Home to challenge a rival!</p>
+                                    </div>
+                                )}
                             </div>
                         </div>
 

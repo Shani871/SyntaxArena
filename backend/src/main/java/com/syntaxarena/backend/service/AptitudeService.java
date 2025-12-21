@@ -50,11 +50,6 @@ public class AptitudeService {
             message.put("content", prompt);
             payload.put("messages", List.of(message));
 
-            // Enable thinking mode for better reasoning
-            Map<String, Object> extra = new HashMap<>();
-            extra.put("enable_thinking", true);
-            payload.put("chat_template_kwargs", extra);
-
             String requestBody = objectMapper.writeValueAsString(payload);
 
             HttpRequest httpRequest = HttpRequest.newBuilder()
@@ -70,12 +65,12 @@ public class AptitudeService {
                 return parseResponse(response.body());
             } else {
                 System.out.println("NVIDIA API Error: " + response.body() + ". Utilizing fallback.");
-                return getFallbackQuestions(request.getCategory(), request.getDifficulty());
+                return getFallbackQuestions(request.getTopic(), request.getDifficulty());
             }
 
         } catch (Exception e) {
             System.out.println("Exception: " + e.getMessage() + ". Utilizing fallback.");
-            return getFallbackQuestions(request.getCategory(), request.getDifficulty());
+            return getFallbackQuestions(request.getTopic(), request.getDifficulty());
         }
     }
 
@@ -125,7 +120,7 @@ public class AptitudeService {
                         "correctAnswer is 0-indexed (0=first option, 1=second, etc.)",
                 request.getNumberOfQuestions(),
                 request.getDifficulty(),
-                request.getCategory(),
+                request.getTopic(),
                 uniqueId,
                 timestamp,
                 request.getDifficulty());

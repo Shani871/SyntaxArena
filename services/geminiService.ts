@@ -1,17 +1,28 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Problem, VisualizerStep } from "../types";
 
-// Initialize Gemini
-// Note: In a real app, ensure process.env.API_KEY is defined.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Initialize Gemini lazily to avoid crash if API key is missing
+let aiInstance: any = null;
 
-const MODEL_FLASH = 'gemini-2.5-flash';
+const getAI = () => {
+  if (aiInstance) return aiInstance;
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
+  if (!apiKey) {
+    console.warn("VITE_GEMINI_API_KEY is missing. AI features will be limited.");
+    return null;
+  }
+  aiInstance = new GoogleGenAI({ apiKey });
+  return aiInstance;
+};
+
+const MODEL_FLASH = 'gemini-2.0-flash';
 
 /**
  * Generates a unique story variant for a coding problem to prevent cheating.
  */
 export const generateProblemVariant = async (baseProblem: Problem): Promise<string> => {
-  if (!process.env.API_KEY) return baseProblem.baseDescription;
+  const ai = getAI();
+  if (!ai) return baseProblem.baseDescription;
 
   const themes = ['Space Opera', 'Medieval Fantasy', 'Cyberpunk Heist', 'Pizza Delivery', 'Zombie Apocalypse'];
   const randomTheme = themes[Math.floor(Math.random() * themes.length)];
@@ -51,7 +62,8 @@ export const getInvigilatorHint = async (
   currentCode: string,
   hintType: 'GENERAL' | 'SYNTAX' | 'LOGIC' | 'OPTIMIZATION' | 'EXPLANATION' = 'GENERAL'
 ): Promise<string> => {
-  if (!process.env.API_KEY) return "System Offline: Neural Link Severed (Check API Key).";
+  const ai = getAI();
+  if (!ai) return "System Offline: Neural Link Severed (Check API Key).";
 
   let specificInstruction = "";
   switch (hintType) {
@@ -121,7 +133,8 @@ export const getInvigilatorHint = async (
  * Visualizes code execution logic.
  */
 export const visualizeCodeExecution = async (code: string): Promise<VisualizerStep[]> => {
-  if (!process.env.API_KEY) {
+  const ai = getAI();
+  if (!ai) {
     return [{ step: 1, description: "API Key Missing", changedVariables: {} }];
   }
 
@@ -169,7 +182,8 @@ export const visualizeCodeExecution = async (code: string): Promise<VisualizerSt
  * Explains concept in native language (Story Mode).
  */
 export const explainConceptSimple = async (concept: string, language: string, level: 'Beginner' | 'Intermediate' | 'Advanced'): Promise<string> => {
-  if (!process.env.API_KEY) return "Service unavailable.";
+  const ai = getAI();
+  if (!ai) return "Service unavailable.";
 
   const prompt = `
     Explain the backend computer science concept "${concept}" to a ${level} level student in the language "${language}".
@@ -192,7 +206,8 @@ export const explainConceptSimple = async (concept: string, language: string, le
  * Generates a story explanation for a specific block of code.
  */
 export const generateCodeStory = async (code: string, language: string): Promise<string> => {
-  if (!process.env.API_KEY) return "Service unavailable.";
+  const ai = getAI();
+  if (!ai) return "Service unavailable.";
 
   const prompt = `
     Read the following code and explain exactly what it does in the form of a simple story.
@@ -221,7 +236,8 @@ export const generateCodeStory = async (code: string, language: string): Promise
  * Generates an ASCII/Text-based diagram for an API route.
  */
 export const generateApiDiagram = async (code: string): Promise<string> => {
-  if (!process.env.API_KEY) return "Service unavailable.";
+  const ai = getAI();
+  if (!ai) return "Service unavailable. (Check API Key)";
 
   const prompt = `
     Analyze this backend API route code.
@@ -249,18 +265,25 @@ export const generateApiDiagram = async (code: string): Promise<string> => {
 /**
  * BlackHole Chatbot Service via backend NVIDIA API
  */
-export const chatWithBlackhole = async (history: { role: string; text: string }[], message: string): Promise<string> => {
+export const chatWithBlackhole = async (history: { role: string; text: string }[], message: string, token?: string): Promise<string> => {
   try {
-    const response = await fetch('http://localhost:8080/api/blackhole', {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch('/api/blackhole', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify({
         message,
         history,
       }),
     });
+
 
     if (!response.ok) {
       throw new Error(`Backend error: ${response.status}`);
@@ -277,13 +300,19 @@ export const chatWithBlackhole = async (history: { role: string; text: string }[
 /**
  * Chat with a specific document context via backend NVIDIA API.
  */
-export const chatWithDocument = async (history: { role: string; text: string }[], documentContent: string, message: string): Promise<string> => {
+export const chatWithDocument = async (history: { role: string; text: string }[], documentContent: string, message: string, token?: string): Promise<string> => {
   try {
-    const response = await fetch('http://localhost:8080/api/doc-chat', {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch('/api/doc-chat', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify({
         documentContent,
         message,

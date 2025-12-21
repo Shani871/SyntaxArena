@@ -1,0 +1,10 @@
+node_modules
+dist
+.git
+.idea
+.vscode
+*.log
+backend/target
+backend/mvnw
+backend/mvnw.cmd
+.DS_Store

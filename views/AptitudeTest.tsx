@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { BrainCircuit, CheckCircle, XCircle, ChevronRight, RefreshCw, Award, Server, Cpu, Calculator, PieChart, Activity, Loader } from 'lucide-react';
 import { apiService } from '../services/apiService';
+import { useAuth } from '../components/AuthContext';
 
 interface Question {
     id: number;
@@ -42,6 +43,7 @@ const TOPICS: Topic[] = [
 ];
 
 export const AptitudeTest: React.FC = () => {
+    const { user } = useAuth();
     const [view, setView] = useState<'TOPICS' | 'QUIZ' | 'RESULT' | 'LOADING'>('TOPICS');
     const [activeTopic, setActiveTopic] = useState<Topic | null>(null);
     const [questions, setQuestions] = useState<Question[]>([]);
@@ -56,13 +58,21 @@ export const AptitudeTest: React.FC = () => {
         setScore(0);
         setView('LOADING');
 
-        // Fetch AI-generated questions
-        const result = await apiService.generateAptitudeQuestions(topic.id, 3);
-        if (result && result.questions && result.questions.length > 0) {
-            setQuestions(result.questions);
-            setView('QUIZ');
-        } else {
-            console.error('Failed to load questions');
+        try {
+            // Get ID token for authenticated request
+            const token = await user?.getIdToken();
+
+            // Fetch AI-generated questions
+            const result = await apiService.generateAptitudeQuestions(topic.id, 3, token);
+            if (result && result.questions && result.questions.length > 0) {
+                setQuestions(result.questions);
+                setView('QUIZ');
+            } else {
+                console.error('Failed to load questions: Empty result');
+                setView('TOPICS');
+            }
+        } catch (error) {
+            console.error('Error starting quiz:', error);
             setView('TOPICS');
         }
     };

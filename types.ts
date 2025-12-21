@@ -63,3 +63,10 @@ export interface VisualizerStep {
   description: string;
   changedVariables: Record<string, string>;
 }
+
+export interface ScheduledBattle {
+  id: string;
+  date: string;
+  time: string;
+  opponent: string;
+}

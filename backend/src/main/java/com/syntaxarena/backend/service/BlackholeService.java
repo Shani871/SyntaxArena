@@ -71,8 +71,13 @@ public class BlackholeService {
             // Add chat history
             if (request.getHistory() != null) {
                 for (BlackholeRequest.ChatHistoryItem item : request.getHistory()) {
+                    if (item == null || item.getRole() == null || item.getText() == null)
+                        continue;
                     Map<String, Object> msg = new HashMap<>();
-                    String role = item.getRole().equals("model") ? "assistant" : item.getRole();
+                    String role = item.getRole().equalsIgnoreCase("model")
+                            || item.getRole().equalsIgnoreCase("assistant")
+                                    ? "assistant"
+                                    : "user";
                     msg.put("role", role);
                     msg.put("content", item.getText());
                     messages.add(msg);

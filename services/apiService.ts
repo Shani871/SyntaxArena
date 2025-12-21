@@ -21,16 +21,33 @@ export interface AptitudeResult {
     questions: AptitudeQuestion[];
 }
 
-const API_BASE_URL = '/api'; // Will be proxied by Vite
+export interface ValidationResult {
+    allPassed: boolean;
+    passedCount: number;
+    totalCount: number;
+    results: {
+        testNumber: number;
+        input: string;
+        expected: string;
+        actual: string;
+        passed: boolean;
+    }[];
+    feedback: string;
+}
+
+const API_BASE_URL = '/api';
 
 export const apiService = {
-    executeCode: async (language: string, code: string): Promise<ExecutionResult> => {
+    executeCode: async (language: string, code: string, token?: string): Promise<ExecutionResult> => {
         try {
+            const headers: Record<string, string> = {
+                'Content-Type': 'application/json',
+            };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
             const response = await fetch(`${API_BASE_URL}/execute`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers,
                 body: JSON.stringify({ language, code }),
             });
 
@@ -47,13 +64,16 @@ export const apiService = {
         }
     },
 
-    generateQuestion: async (topic: string, difficulty: string, language: string): Promise<QuestionResult | null> => {
+    generateQuestion: async (topic: string, difficulty: string, language: string, token?: string): Promise<QuestionResult | null> => {
         try {
+            const headers: Record<string, string> = {
+                'Content-Type': 'application/json',
+            };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
             const response = await fetch(`${API_BASE_URL}/generate-question`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers,
                 body: JSON.stringify({ topic, difficulty, language }),
             });
 
@@ -69,13 +89,16 @@ export const apiService = {
         }
     },
 
-    generateAptitudeQuestions: async (topic: string, numberOfQuestions: number = 3): Promise<AptitudeResult | null> => {
+    generateAptitudeQuestions: async (topic: string, numberOfQuestions: number = 3, token?: string): Promise<AptitudeResult | null> => {
         try {
+            const headers: Record<string, string> = {
+                'Content-Type': 'application/json',
+            };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
             const response = await fetch(`${API_BASE_URL}/generate-aptitude`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers,
                 body: JSON.stringify({ topic, numberOfQuestions }),
             });
 
@@ -91,13 +114,16 @@ export const apiService = {
         }
     },
 
-    generateCodeStory: async (code: string, language: string): Promise<string | null> => {
+    generateCodeStory: async (code: string, language: string, token?: string): Promise<string | null> => {
         try {
+            const headers: Record<string, string> = {
+                'Content-Type': 'application/json',
+            };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
             const response = await fetch(`${API_BASE_URL}/generate-code-story`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers,
                 body: JSON.stringify({ code, language }),
             });
 
@@ -114,13 +140,16 @@ export const apiService = {
         }
     },
 
-    visualizeExecution: async (code: string, language: string): Promise<string | null> => {
+    visualizeExecution: async (code: string, language: string, token?: string): Promise<AptitudeQuestion[] | any[] | null> => {
         try {
+            const headers: Record<string, string> = {
+                'Content-Type': 'application/json',
+            };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
             const response = await fetch(`${API_BASE_URL}/visualize-execution`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers,
                 body: JSON.stringify({ code, language }),
             });
 
@@ -137,13 +166,16 @@ export const apiService = {
         }
     },
 
-    simplifyConcept: async (concept: string, language: string, level: string): Promise<string | null> => {
+    simplifyConcept: async (concept: string, language: string, level: string, token?: string): Promise<string | null> => {
         try {
+            const headers: Record<string, string> = {
+                'Content-Type': 'application/json',
+            };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
             const response = await fetch(`${API_BASE_URL}/simplify-concept`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers,
                 body: JSON.stringify({ concept, language, level }),
             });
 
@@ -156,6 +188,31 @@ export const apiService = {
             return result.explanation;
         } catch (error) {
             console.error("Concept simplification error", error);
+            return null;
+        }
+    },
+
+    validateSolution: async (code: string, language: string, problemDescription: string, token?: string): Promise<ValidationResult | null> => {
+        try {
+            const headers: Record<string, string> = {
+                'Content-Type': 'application/json',
+            };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
+            const response = await fetch(`${API_BASE_URL}/validate-solution`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ code, language, problemDescription }),
+            });
+
+            if (!response.ok) {
+                console.error("Solution validation failed", response.statusText);
+                return null;
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error("Solution validation error", error);
             return null;
         }
     }

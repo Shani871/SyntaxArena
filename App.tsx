@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { Landing } from './views/Landing';
 import { BattleArena } from './views/BattleArena';
@@ -16,12 +16,53 @@ import { Settings } from './views/Settings';
 import { ArenaLobby } from './views/ArenaLobby';
 import { ResumeBuilder } from './views/ResumeBuilder';
 import { Blackhole } from './components/Blackhole';
-import { GameMode } from './types';
-import { MessageSquare } from 'lucide-react';
+import { GameMode, ScheduledBattle } from './types';
+import { MessageSquare, Loader2 } from 'lucide-react';
+import { useAuth } from './components/AuthContext';
 
 function App() {
+  const { user, loading } = useAuth();
   const [mode, setMode] = useState<GameMode>(GameMode.AUTH);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [scheduledBattles, setScheduledBattles] = useState<ScheduledBattle[]>([]);
+
+  // Update mode based on auth state
+  useEffect(() => {
+    if (!loading) {
+      if (user) {
+        if (mode === GameMode.AUTH) {
+          setMode(GameMode.DASHBOARD);
+        }
+      } else {
+        setMode(GameMode.AUTH);
+      }
+    }
+  }, [user, loading]);
+
+  // Load from local storage on init
+  useEffect(() => {
+    const saved = localStorage.getItem('scheduled_battles');
+    if (saved) {
+      try {
+        setScheduledBattles(JSON.parse(saved));
+      } catch (e) {
+        console.error("Failed to parse scheduled battles", e);
+      }
+    }
+  }, []);
+
+  // Save to local storage on change
+  useEffect(() => {
+    localStorage.setItem('scheduled_battles', JSON.stringify(scheduledBattles));
+  }, [scheduledBattles]);
+
+  const handleAddBattle = (battle: ScheduledBattle) => {
+    setScheduledBattles(prev => [...prev, battle]);
+  };
+
+  const handleRemoveBattle = (id: string) => {
+    setScheduledBattles(prev => prev.filter(b => b.id !== id));
+  };
 
   // Wrapper to switch mode
   const handleSetMode = (newMode: GameMode) => {
@@ -33,9 +74,15 @@ function App() {
       case GameMode.AUTH:
         return <Auth setMode={handleSetMode} />;
       case GameMode.HOME:
-        return <Landing setMode={handleSetMode} />;
+        return <Landing setMode={handleSetMode} onScheduleBattle={handleAddBattle} />;
       case GameMode.DASHBOARD:
-        return <Dashboard setMode={handleSetMode} />;
+        return (
+          <Dashboard
+            setMode={handleSetMode}
+            scheduledBattles={scheduledBattles}
+            onRemoveBattle={handleRemoveBattle}
+          />
+        );
       case GameMode.BATTLE:
       case GameMode.ASSESSMENT:
         return <BattleArena key={mode} mode={mode} />;

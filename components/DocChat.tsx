@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, Sparkles, X, Loader2, Bot, FileText } from 'lucide-react';
 import { chatWithDocument } from '../services/geminiService';
 import { ChatMessage } from '../types';
+import { useAuth } from './AuthContext';
 
 interface DocChatProps {
     documentContent: string;
@@ -10,6 +11,7 @@ interface DocChatProps {
 }
 
 export const DocChat: React.FC<DocChatProps> = ({ documentContent, onClose, onCreateDocument }) => {
+    const { user } = useAuth();
     const [messages, setMessages] = useState<ChatMessage[]>([
         { role: 'model', text: 'Hello! I can help you with this document or create new ones. Try saying "Create a document about [topic]"' }
     ]);
@@ -30,10 +32,12 @@ export const DocChat: React.FC<DocChatProps> = ({ documentContent, onClose, onCr
         setIsLoading(true);
 
         try {
-            const response = await fetch('http://localhost:8080/api/doc-chat', {
+            const token = await user?.getIdToken();
+            const response = await fetch('/api/doc-chat', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': token ? `Bearer ${token}` : '',
                 },
                 body: JSON.stringify({
                     documentContent,

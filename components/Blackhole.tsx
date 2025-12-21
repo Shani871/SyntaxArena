@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { X, Send, MessageSquare, Loader2, GripHorizontal, Sparkles, ThumbsUp, ThumbsDown, Minimize2, Maximize2, Copy, Check, Bot, User as UserIcon } from 'lucide-react';
 import { chatWithBlackhole } from '../services/geminiService';
 import { ChatMessage } from '../types';
+import { useAuth } from './AuthContext';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -10,6 +11,7 @@ interface BlackholeProps {
 }
 
 export const Blackhole: React.FC<BlackholeProps> = ({ onClose }) => {
+    const { user } = useAuth();
     const [messages, setMessages] = useState<ChatMessage[]>([
         {
             role: 'model',
@@ -86,7 +88,8 @@ export const Blackhole: React.FC<BlackholeProps> = ({ onClose }) => {
         setInput('');
         setIsLoading(true);
 
-        const responseText = await chatWithBlackhole(messages, input);
+        const token = await user?.getIdToken();
+        const responseText = await chatWithBlackhole(messages, input, token);
 
         setMessages(prev => [...prev, { role: 'model', text: responseText }]);
         setIsLoading(false);

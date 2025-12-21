@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { GameMode } from '../types';
+import { GameMode, ScheduledBattle } from '../types';
 import { Shield, Sword, Zap, Calendar, Clock, CheckCircle2, Cpu, BarChart2, Globe, Users } from 'lucide-react';
 
 interface LandingProps {
     setMode: (mode: GameMode) => void;
+    onScheduleBattle?: (battle: ScheduledBattle) => void;
 }
 
-export const Landing: React.FC<LandingProps> = ({ setMode }) => {
+export const Landing: React.FC<LandingProps> = ({ setMode, onScheduleBattle }) => {
     const [text, setText] = useState('');
     const fullText = "> Initializing competitive environment...\n> The ultimate platform to Learn, Battle, and Visualize backend systems.";
     const [showScheduleModal, setShowScheduleModal] = useState(false);
-    const [scheduleData, setScheduleData] = useState({ date: '', time: '' });
+    const [scheduleData, setScheduleData] = useState({ date: '', time: '', opponent: 'Random Opponent' });
     const [scheduleSuccess, setScheduleSuccess] = useState(false);
 
     useEffect(() => {
@@ -25,6 +26,16 @@ export const Landing: React.FC<LandingProps> = ({ setMode }) => {
 
     const handleScheduleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (onScheduleBattle) {
+            onScheduleBattle({
+                id: Date.now().toString(),
+                date: scheduleData.date,
+                time: scheduleData.time,
+                opponent: scheduleData.opponent
+            });
+        }
+
         setScheduleSuccess(true);
         setTimeout(() => {
             setShowScheduleModal(false);

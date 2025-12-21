@@ -3,9 +3,11 @@ import { Box, Cpu, Languages, RefreshCcw, PlayCircle, BookOpen, Share2, FileCode
 import { CodeEditor } from '../components/CodeEditor';
 import { generateApiDiagram } from '../services/geminiService';
 import { apiService } from '../services/apiService';
+import { useAuth } from '../components/AuthContext';
 import { VisualizerStep } from '../types';
 
 export const Visualizer: React.FC = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'EXECUTION' | 'STORY' | 'DIAGRAM' | 'CONCEPT'>('EXECUTION');
 
   // Execution State
@@ -78,9 +80,10 @@ export const Visualizer: React.FC = () => {
 
   const handleVisualize = async () => {
     setLoading(true);
-    const result = await apiService.visualizeExecution(code, language);
+    const token = await user?.getIdToken();
+    const result = await apiService.visualizeExecution(code, language, token);
     if (result) {
-      setSteps(result);
+      setSteps(result as any);
       setCurrentStepIndex(0); // Start at step 0
     }
     setLoading(false);
@@ -88,15 +91,17 @@ export const Visualizer: React.FC = () => {
 
   const handleExplainConcept = async () => {
     setContentLoading(true);
-    const result = await apiService.simplifyConcept(concept, language, difficulty);
+    const token = await user?.getIdToken();
+    const result = await apiService.simplifyConcept(concept, language, difficulty, token);
     setOutputContent(result || "Error generating explanation.");
     setContentLoading(false);
   };
 
   const handleGenerateStory = async () => {
     setContentLoading(true);
-    const result = await apiService.generateCodeStory(storyCode, language);
-    setOutputContent(result);
+    const token = await user?.getIdToken();
+    const result = await apiService.generateCodeStory(storyCode, language, token);
+    setOutputContent(result || "Error generating story.");
     setContentLoading(false);
   };
 

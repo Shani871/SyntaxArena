@@ -8,12 +8,14 @@ import { apiService, ValidationResult } from '../services/apiService';
 import { useProctoring } from '../hooks/useProctoring';
 import { ProctoringCamera } from '../components/ProctoringCamera';
 import { ProctoringSetup } from '../components/ProctoringSetup';
+import { useAuth } from '../components/AuthContext';
 
 interface BattleArenaProps {
     mode?: GameMode;
 }
 
 export const BattleArena: React.FC<BattleArenaProps> = ({ mode = GameMode.BATTLE }) => {
+    const { user } = useAuth();
     const [matchState, setMatchState] = useState<'SEARCHING' | 'FOUND' | 'BATTLE'>('SEARCHING');
     const [problem, setProblem] = useState<Problem>(SAMPLE_PROBLEMS[0]);
     const [code, setCode] = useState(`function solve(nums, target) {
@@ -117,10 +119,12 @@ export const BattleArena: React.FC<BattleArenaProps> = ({ mode = GameMode.BATTLE
 
         // Reset state for new problem
         // Use backend to generate a fresh problem if possible
+        const token = await user?.getIdToken();
         const backendQuestion = await apiService.generateQuestion(
             practiceTopic, // Use dynamic topic
             difficulty,
-            selectedLanguage // Use selected language
+            selectedLanguage, // Use selected language
+            token
         );
 
         if (backendQuestion) {
@@ -305,8 +309,9 @@ export const BattleArena: React.FC<BattleArenaProps> = ({ mode = GameMode.BATTLE
         // Execute via Backend with Test Harness
         // Problem might be generic or generated, check if it has a harness
         let harness = (problem as any).testHarness;
+        const token = await user?.getIdToken();
 
-        const result = await apiService.executeCode(selectedLanguage, code, harness);
+        const result = await apiService.executeCode(selectedLanguage, code, token);
 
         setIsLoading(false);
         setIsConsoleOpen(true);
@@ -343,11 +348,13 @@ export const BattleArena: React.FC<BattleArenaProps> = ({ mode = GameMode.BATTLE
         setIsSubmitting(true);
         setMessages(prev => [...prev, { role: 'user', text: '>> SUBMITTING SOLUTION FOR VALIDATION...' }]);
         setPracticeStats(prev => ({ ...prev, attempts: prev.attempts + 1 }));
+        const token = await user?.getIdToken();
 
         const result = await apiService.validateSolution(
             code,
             selectedLanguage,
-            problem.generatedStory || problem.baseDescription
+            problem.generatedStory || problem.baseDescription,
+            token
         );
 
         setIsSubmitting(false);
