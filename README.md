@@ -2,7 +2,7 @@
 
 **SyntaxArena** is a premium, gamified coding and learning platform designed to help developers master technical concepts through real-time competition, AI-driven visualization, and interactive exercises.
 
-![Project Preview](https://via.placeholder.com/800x400?text=SyntaxArena+Preview)
+![Project Preview]([https://via.placeholder.com/800x400?text=SyntaxArena+Preview](https://syntaxarena-frontend-2bpfjpcstq-uc.a.run.app/)
 
 ## 🌟 Key Features
 
