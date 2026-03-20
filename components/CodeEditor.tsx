@@ -1,6 +1,6 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Editor, { OnMount } from "@monaco-editor/react";
-import { Lock, FileCode, X, Search, GitBranch, Settings, Bell, Menu, Clock } from 'lucide-react';
+import { Bell, Clock, FileCode, GitBranch, Lock, X } from 'lucide-react';
 
 interface CodeEditorProps {
   code: string;
@@ -26,16 +26,17 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   timerValue
 }) => {
   const [showPasteWarning, setShowPasteWarning] = useState(false);
-  const editorRef = useRef<any>(null);
+  const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
+  const monacoRef = useRef<Parameters<OnMount>[1] | null>(null);
   const [cursorPosition, setCursorPosition] = useState({ line: 1, column: 1 });
-  const decorationsRef = useRef<any[]>([]);
+  const decorationsRef = useRef<string[]>([]);
 
   // Effect to update line highlight
-  React.useEffect(() => {
-    if (editorRef.current && activeLine) {
+  useEffect(() => {
+    if (editorRef.current && monacoRef.current && activeLine) {
       decorationsRef.current = editorRef.current.deltaDecorations(decorationsRef.current, [
         {
-          range: new (window as any).monaco.Range(activeLine, 1, activeLine, 1),
+          range: new monacoRef.current.Range(activeLine, 1, activeLine, 1),
           options: {
             isWholeLine: true,
             className: 'myLineDecoration',
@@ -52,6 +53,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
 
   const handleEditorDidMount: OnMount = (editor, monaco) => {
     editorRef.current = editor;
+    monacoRef.current = monaco;
 
     // Track cursor position
     editor.onDidChangeCursorPosition((e) => {
@@ -62,11 +64,15 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
     });
 
     // Add Highlight CSS
-    const style = document.createElement('style');
-    style.innerHTML = `
-        .myLineDecoration { background: rgba(59, 130, 246, 0.3) !important; border-left: 2px solid #3b82f6; }
-    `;
-    document.head.appendChild(style);
+    const styleId = 'syntaxarena-monaco-line-highlight';
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.innerHTML = `
+          .myLineDecoration { background: rgba(59, 130, 246, 0.3) !important; border-left: 2px solid #3b82f6; }
+      `;
+      document.head.appendChild(style);
+    }
 
     // Prevent Paste Logic
     if (preventPaste) {
@@ -80,6 +86,12 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
       });
     }
   };
+
+  useEffect(() => {
+    return () => {
+      decorationsRef.current = [];
+    };
+  }, []);
 
   return (
     <div className="w-full h-full relative overflow-hidden flex flex-col bg-[#1e1e1e] border-l border-[#2b2b2b]">

@@ -22,7 +22,10 @@ export interface Problem {
   title: string;
   difficulty: 'Easy' | 'Medium' | 'Hard';
   baseDescription: string;
-  generatedStory?: string; // The AI variant
+  generatedStory?: string;
+  topic?: string;
+  initialCode?: string;
+  testHarness?: string;
 }
 
 export interface ChatMessage {

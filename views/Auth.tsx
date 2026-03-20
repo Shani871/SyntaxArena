@@ -1,240 +1,214 @@
-import React, { useState } from 'react';
-import { GameMode } from '../types';
-import { User, Lock, Mail, ArrowRight, Github, ShieldCheck, Loader2 } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { ArrowRight, CheckCircle2, Loader2, Lock, Mail, ShieldCheck, Sparkles, User } from 'lucide-react';
+import { BrandMark } from '../components/BrandMark';
 import { useAuth } from '../components/AuthContext';
+import { GameMode } from '../types';
 
 interface AuthProps {
-    setMode: (mode: GameMode) => void;
+  setMode: (mode: GameMode) => void;
 }
 
 export const Auth: React.FC<AuthProps> = ({ setMode }) => {
-    const { loginWithGoogle } = useAuth();
-    const [isLogin, setIsLogin] = useState(true);
-    const [loading, setLoading] = useState(false);
-    const [formData, setFormData] = useState({
-        username: '',
-        email: '',
-        password: ''
-    });
+  const { authEnabled, loginWithGoogle } = useAuth();
+  const [isLogin, setIsLogin] = useState(true);
+  const [loading, setLoading] = useState<'FORM' | 'GOOGLE' | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: '',
+  });
 
-    // Social login loading states
-    const [socialLoading, setSocialLoading] = useState<'GOOGLE' | 'GITHUB' | null>(null);
+  const checklist = useMemo(
+    () => [
+      'Focused battle and practice workflows',
+      'Interactive visualizer, docs, and playground tools',
+      'Persistent local progress and scheduled battles',
+    ],
+    [],
+  );
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    setError(null);
+    setLoading('FORM');
 
-        // Simulate API authentication delay for local mock login
-        setTimeout(() => {
-            setLoading(false);
-            setMode(GameMode.DASHBOARD);
-        }, 1500);
-    };
+    window.setTimeout(() => {
+      setLoading(null);
+      setMode(GameMode.DASHBOARD);
+    }, 800);
+  };
 
-    const handleGoogleLogin = async () => {
-        setSocialLoading('GOOGLE');
-        try {
-            await loginWithGoogle();
-            // App.tsx handles the mode switch upon user change
-        } catch (error) {
-            console.error("Google Auth Error:", error);
-        } finally {
-            setSocialLoading(null);
-        }
-    };
+  const handleGoogleLogin = async () => {
+    setError(null);
+    setLoading('GOOGLE');
 
-    const handleSocialAuth = (provider: 'GOOGLE' | 'GITHUB') => {
-        if (provider === 'GOOGLE') {
-            handleGoogleLogin();
-            return;
-        }
-        setSocialLoading(provider);
-        setTimeout(() => {
-            setSocialLoading(null);
-            setMode(GameMode.DASHBOARD);
-        }, 1800);
-    };
+    try {
+      await loginWithGoogle();
+    } catch (loginError) {
+      setError(loginError instanceof Error ? loginError.message : 'Unable to sign in with Google.');
+    } finally {
+      setLoading(null);
+    }
+  };
 
-    return (
-        <div className="h-full w-full flex flex-col items-center justify-start relative overflow-y-auto bg-[#0a0a0b] text-slate-200 font-mono scrollbar-hide pt-12 md:pt-24">
-            {/* High-End Animated Background */}
-            <div className="absolute inset-0 z-0 overflow-hidden">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[120px] animate-pulse"></div>
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/10 rounded-full blur-[120px] animate-pulse delay-1000"></div>
+  return (
+    <div className="flex h-full w-full overflow-y-auto bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.18),_transparent_30%),radial-gradient(circle_at_bottom_right,_rgba(16,185,129,0.14),_transparent_30%),linear-gradient(180deg,_#020617_0%,_#0f172a_100%)] px-4 py-10 text-slate-100 md:px-8 md:py-14">
+      <div className="mx-auto grid w-full max-w-6xl gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+        <section className="rounded-[32px] border border-white/10 bg-white/[0.04] p-6 shadow-2xl backdrop-blur-xl md:p-8 lg:p-10">
+          <div className="inline-flex rounded-full border border-emerald-400/25 bg-emerald-400/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-300">
+            Production-ready workspace
+          </div>
 
-                {/* Visual Grid Pattern */}
-                <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '32px 32px' }}></div>
+          <div className="mt-6">
+            <BrandMark />
+            <h1 className="mt-8 max-w-xl text-4xl font-semibold tracking-tight text-white md:text-5xl">
+              A cleaner command center for practice, battle, and backend learning.
+            </h1>
+            <p className="mt-4 max-w-2xl text-base leading-7 text-slate-300">
+              SyntaxArena now opens with a sharper shell, safer persistence, and a calmer UI that scales better across the core workflows.
+            </p>
+          </div>
 
-                {/* Moving Code Fragments or Light Streaks */}
-                <div className="absolute top-1/4 left-1/2 w-[500px] h-[1px] bg-gradient-to-r from-transparent via-blue-500/20 to-transparent -translate-x-1/2 animate-scan-slow"></div>
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
+            {checklist.map((item) => (
+              <div key={item} className="rounded-2xl border border-white/10 bg-slate-950/45 p-4">
+                <Sparkles size={18} className="text-sky-300" />
+                <p className="mt-3 text-sm leading-6 text-slate-300">{item}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-8 rounded-3xl border border-sky-400/18 bg-sky-500/8 p-5">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-500/15 text-sky-300">
+                <ShieldCheck size={20} />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-white">Authentication status</p>
+                <p className="text-sm text-slate-300">
+                  {authEnabled
+                    ? 'Firebase is configured. Google sign-in is enabled for this environment.'
+                    : 'Firebase is not configured. You can still open a local preview session to review the product UI.'}
+                </p>
+              </div>
             </div>
+          </div>
+        </section>
 
-            {/* Auth Card - Premium Glassmorphism */}
-            <div className="relative z-10 w-full max-w-[360px] p-5 md:p-7 bg-[#161617]/40 backdrop-blur-2xl border border-white/5 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-fade-in mx-4 my-6 md:my-10 overflow-hidden group shrink-0">
-                {/* Subtle Card Glow Effect */}
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
+        <section className="rounded-[32px] border border-white/10 bg-slate-950/75 p-6 shadow-2xl backdrop-blur-xl md:p-8">
+          <div className="mb-8">
+            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-sky-300">{isLogin ? 'Sign In' : 'Create Account'}</p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white">
+              {isLogin ? 'Enter the arena' : 'Create your workspace'}
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-slate-400">
+              {authEnabled
+                ? 'Use Google for a real authenticated session, or launch a local preview session from the form.'
+                : 'This environment is running without Firebase credentials, so the form opens a local preview session only.'}
+            </p>
+          </div>
 
-                {/* Header */}
-                <div className="text-center mb-8 relative">
-                    <div className="flex justify-center mb-6">
-                        <div className="relative">
-                            <div className="absolute inset-0 bg-cyber-blue/30 blur-2xl rounded-full scale-110"></div>
-                            <svg width="80" height="80" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="relative z-10 animate-float">
-                                <defs>
-                                    <linearGradient id="auth_logo_grad" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-                                        <stop offset="0%" stopColor="#60a5fa" />
-                                        <stop offset="100%" stopColor="#a78bfa" />
-                                    </linearGradient>
-                                </defs>
-                                <path d="M50 5L93.3 30V80L50 105L6.7 80V30L50 5Z" fill="url(#auth_logo_grad)" fillOpacity="0.1" />
-                                <path d="M50 10L89 32.5V77.5L50 100L11 77.5V32.5L50 10Z" stroke="url(#auth_logo_grad)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                                <path d="M35 48L22 58L35 68" stroke="#fff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
-                                <path d="M65 48L78 58L65 68" stroke="#fff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
-                                <line x1="50" y1="75" x2="58" y2="35" stroke="#10b981" strokeWidth="4" strokeLinecap="round" />
-                            </svg>
-                        </div>
-                    </div>
-                    <h1 className="text-3xl font-black text-white tracking-tighter mb-1 select-none">
-                        SYNTAX<span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">ARENA</span>
-                    </h1>
-                    <div className="h-1 w-12 bg-cyber-blue mx-auto rounded-full mb-4"></div>
-                    <p className="text-slate-400 text-xs font-medium uppercase tracking-[0.2em]">
-                        {isLogin ? 'Authorization Required' : 'Initialize Protocol'}
-                    </p>
+          {error && (
+            <div className="mb-5 rounded-2xl border border-rose-400/25 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{error}</div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {!isLogin && (
+              <label className="block">
+                <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Username</span>
+                <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 focus-within:border-sky-400/40">
+                  <User size={16} className="text-slate-500" />
+                  <input
+                    type="text"
+                    required
+                    value={formData.username}
+                    onChange={(event) => setFormData((current) => ({ ...current, username: event.target.value }))}
+                    className="w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-600"
+                    placeholder="neo-coder"
+                  />
                 </div>
+              </label>
+            )}
 
-                {/* Form */}
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    {!isLogin && (
-                        <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Terminal Handle</label>
-                            <div className="relative group/input">
-                                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500 group-focus-within/input:text-cyber-blue transition-colors">
-                                    <User size={16} />
-                                </div>
-                                <input
-                                    type="text"
-                                    required
-                                    value={formData.username}
-                                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                                    className="w-full bg-white/5 border border-white/10 text-white text-sm rounded-xl focus:ring-1 focus:ring-cyber-blue/50 focus:border-cyber-blue/50 block w-full pl-10 p-3 outline-none transition-all placeholder-slate-600 hover:bg-white/[0.07]"
-                                    placeholder="NeoCoder"
-                                />
-                            </div>
-                        </div>
-                    )}
+            <label className="block">
+              <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Email</span>
+              <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 focus-within:border-sky-400/40">
+                <Mail size={16} className="text-slate-500" />
+                <input
+                  type="email"
+                  required
+                  value={formData.email}
+                  onChange={(event) => setFormData((current) => ({ ...current, email: event.target.value }))}
+                  className="w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-600"
+                  placeholder="dev@syntaxarena.com"
+                />
+              </div>
+            </label>
 
-                    <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Network Identity</label>
-                        <div className="relative group/input">
-                            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500 group-focus-within/input:text-cyber-blue transition-colors">
-                                <Mail size={16} />
-                            </div>
-                            <input
-                                type="email"
-                                required
-                                value={formData.email}
-                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                className="w-full bg-white/5 border border-white/10 text-white text-sm rounded-xl focus:ring-1 focus:ring-cyber-blue/50 focus:border-cyber-blue/50 block w-full pl-10 p-3 outline-none transition-all placeholder-slate-600 hover:bg-white/[0.07]"
-                                placeholder="dev@syntaxarena.com"
-                            />
-                        </div>
-                    </div>
+            <label className="block">
+              <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Password</span>
+              <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 focus-within:border-sky-400/40">
+                <Lock size={16} className="text-slate-500" />
+                <input
+                  type="password"
+                  required
+                  value={formData.password}
+                  onChange={(event) => setFormData((current) => ({ ...current, password: event.target.value }))}
+                  className="w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-600"
+                  placeholder="••••••••"
+                />
+              </div>
+            </label>
 
-                    <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Access Credentials</label>
-                        <div className="relative group/input">
-                            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500 group-focus-within/input:text-cyber-blue transition-colors">
-                                <Lock size={16} />
-                            </div>
-                            <input
-                                type="password"
-                                required
-                                value={formData.password}
-                                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                className="w-full bg-white/5 border border-white/10 text-white text-sm rounded-xl focus:ring-1 focus:ring-cyber-blue/50 focus:border-cyber-blue/50 block w-full pl-10 p-3 outline-none transition-all placeholder-slate-600 hover:bg-white/[0.07]"
-                                placeholder="••••••••"
-                            />
-                        </div>
-                    </div>
+            <button
+              type="submit"
+              disabled={loading !== null}
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-sky-500 to-cyan-400 text-sm font-semibold text-slate-950 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {loading === 'FORM' ? <Loader2 size={16} className="animate-spin" /> : <ArrowRight size={16} />}
+              {authEnabled ? 'Continue to dashboard' : 'Open local preview'}
+            </button>
+          </form>
 
-                    {isLogin && (
-                        <div className="flex justify-end">
-                            <button type="button" className="text-[10px] text-slate-500 hover:text-cyber-blue uppercase tracking-wider font-bold transition-colors">Restore Data</button>
-                        </div>
-                    )}
+          <div className="my-6 flex items-center gap-3">
+            <div className="h-px flex-1 bg-white/10" />
+            <span className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500">or</span>
+            <div className="h-px flex-1 bg-white/10" />
+          </div>
 
-                    <button
-                        type="submit"
-                        disabled={loading || !!socialLoading}
-                        className="w-full h-12 relative overflow-hidden text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-xs font-bold uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-blue-500/20 group/btn disabled:opacity-50 disabled:pointer-events-none"
-                    >
-                        <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700"></div>
-                        <span className="relative flex items-center justify-center gap-2">
-                            {loading ? (
-                                <>
-                                    <Loader2 size={16} className="animate-spin" /> Transmitting...
-                                </>
-                            ) : (
-                                <>
-                                    {isLogin ? 'Establish Connection' : 'Register User'} <ArrowRight size={16} className="group-hover/btn:translate-x-1 transition-transform" />
-                                </>
-                            )}
-                        </span>
-                    </button>
-                </form>
+          <button
+            type="button"
+            onClick={handleGoogleLogin}
+            disabled={!authEnabled || loading !== null}
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] text-sm font-semibold text-white transition hover:border-sky-400/30 hover:bg-white/[0.05] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {loading === 'GOOGLE' ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={16} className="text-sky-300" />}
+            Continue with Google
+          </button>
 
-                {/* Divider with High-End Look */}
-                <div className="flex items-center my-8">
-                    <div className="h-px flex-1 bg-gradient-to-r from-transparent to-white/10"></div>
-                    <div className="px-4 text-[10px] text-slate-600 font-black tracking-widest">SECURE LINK</div>
-                    <div className="h-px flex-1 bg-gradient-to-l from-transparent to-white/10"></div>
-                </div>
-
-                {/* Enhanced Social Login */}
-                <div className="grid grid-cols-2 gap-4">
-                    <button
-                        type="button"
-                        onClick={() => handleSocialAuth('GITHUB')}
-                        disabled={loading || !!socialLoading}
-                        className="flex items-center justify-center gap-2 h-11 bg-white/5 hover:bg-white/[0.1] border border-white/10 rounded-xl text-white text-[10px] font-bold uppercase tracking-wider transition-all disabled:opacity-50"
-                    >
-                        {socialLoading === 'GITHUB' ? <Loader2 size={14} className="animate-spin text-cyber-blue" /> : <Github size={16} />}
-                        {socialLoading === 'GITHUB' ? 'Linking...' : 'GitHub'}
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => handleSocialAuth('GOOGLE')}
-                        disabled={loading || !!socialLoading}
-                        className="flex items-center justify-center gap-2 h-11 bg-white/5 hover:bg-white/[0.1] border border-white/10 rounded-xl text-white text-[10px] font-bold uppercase tracking-wider transition-all disabled:opacity-50"
-                    >
-                        {socialLoading === 'GOOGLE' ? <Loader2 size={14} className="animate-spin text-red-500" /> : <ShieldCheck size={16} className="text-red-500" />}
-                        {socialLoading === 'GOOGLE' ? 'Verifying...' : 'Google'}
-                    </button>
-                </div>
-
-                <div className="mt-8 text-center pt-6 border-t border-white/5">
-                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
-                        {isLogin ? "New to the Arena?" : "Existing Network Identity?"}{" "}
-                        <button
-                            type="button"
-                            onClick={() => setIsLogin(!isLogin)}
-                            className="text-white hover:text-cyber-blue font-black underline decoration-cyber-blue/50 underline-offset-4 transition-all ml-1"
-                        >
-                            {isLogin ? 'Join Collective' : 'Log In'}
-                        </button>
-                    </p>
-                </div>
+          <div className="mt-8 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">What changed</p>
+            <div className="mt-3 space-y-3 text-sm text-slate-300">
+              <div className="flex gap-3">
+                <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-emerald-300" />
+                <span>Cleaner auth shell with explicit environment status.</span>
+              </div>
+              <div className="flex gap-3">
+                <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-emerald-300" />
+                <span>Misleading silent failures replaced with clear fallback behavior.</span>
+              </div>
             </div>
+          </div>
 
-            {/* Footer Stats - Centered relative to the card */}
-            <div className="mt-auto md:mt-8 pb-8 md:pb-4 text-center text-[10px] text-[#444] space-x-4 shrink-0">
-                <span>USERS: 14,203</span>
-                <span>•</span>
-                <span>BATTLES: 89,102</span>
-                <span>•</span>
-                <span>STATUS: ONLINE</span>
-            </div>
-        </div>
-    );
+          <p className="mt-6 text-center text-sm text-slate-400">
+            {isLogin ? 'Need a new account?' : 'Already have access?'}{' '}
+            <button type="button" onClick={() => setIsLogin((value) => !value)} className="font-semibold text-sky-300 hover:text-sky-200">
+              {isLogin ? 'Create one' : 'Sign in'}
+            </button>
+          </p>
+        </section>
+      </div>
+    </div>
+  );
 };

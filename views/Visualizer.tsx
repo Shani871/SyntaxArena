@@ -5,6 +5,7 @@ import { generateApiDiagram } from '../services/geminiService';
 import { apiService } from '../services/apiService';
 import { useAuth } from '../components/AuthContext';
 import { VisualizerStep } from '../types';
+import { readStorage, storageKeys, writeStorage } from '../utils/storage';
 
 export const Visualizer: React.FC = () => {
   const { user } = useAuth();
@@ -206,9 +207,9 @@ export const Visualizer: React.FC = () => {
     };
 
     // Get existing docs from localStorage
-    const existingDocs = JSON.parse(localStorage.getItem('syntaxarena_docs') || '[]');
+    const existingDocs = readStorage<any[]>(storageKeys.documents, []);
     existingDocs.push(newDoc);
-    localStorage.setItem('syntaxarena_docs', JSON.stringify(existingDocs));
+    writeStorage(storageKeys.documents, existingDocs);
 
     // Show success feedback
     setSaveSuccess(true);

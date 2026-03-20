@@ -1,95 +1,79 @@
-import React, { useState, useEffect } from 'react';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
+import { MessageSquare } from 'lucide-react';
 import { Navbar } from './components/Navbar';
-import { Landing } from './views/Landing';
-import { BattleArena } from './views/BattleArena';
-import { Visualizer } from './views/Visualizer';
-import { Leaderboard } from './views/Leaderboard';
-import { Dashboard } from './views/Dashboard';
-import { Playground } from './views/Playground';
-import { Tutorials } from './views/Tutorials';
-import { Documentation } from './views/Documentation';
-import { Auth } from './views/Auth';
-import { Profile } from './views/Profile';
-import { AptitudeTest } from './views/AptitudeTest';
-import { Jobs } from './views/Jobs';
-import { Settings } from './views/Settings';
-import { ArenaLobby } from './views/ArenaLobby';
-import { ResumeBuilder } from './views/ResumeBuilder';
-import { Blackhole } from './components/Blackhole';
-import { GameMode, ScheduledBattle } from './types';
-import { MessageSquare, Loader2 } from 'lucide-react';
+import { AppLoader } from './components/AppLoader';
 import { useAuth } from './components/AuthContext';
+import { GameMode, ScheduledBattle } from './types';
+import { readStorage, storageKeys, writeStorage } from './utils/storage';
+
+const Landing = lazy(() => import('./views/Landing').then((module) => ({ default: module.Landing })));
+const BattleArena = lazy(() => import('./views/BattleArena').then((module) => ({ default: module.BattleArena })));
+const Visualizer = lazy(() => import('./views/Visualizer').then((module) => ({ default: module.Visualizer })));
+const Leaderboard = lazy(() => import('./views/Leaderboard').then((module) => ({ default: module.Leaderboard })));
+const Dashboard = lazy(() => import('./views/Dashboard').then((module) => ({ default: module.Dashboard })));
+const Playground = lazy(() => import('./views/Playground').then((module) => ({ default: module.Playground })));
+const Tutorials = lazy(() => import('./views/Tutorials').then((module) => ({ default: module.Tutorials })));
+const Documentation = lazy(() => import('./views/Documentation').then((module) => ({ default: module.Documentation })));
+const Auth = lazy(() => import('./views/Auth').then((module) => ({ default: module.Auth })));
+const Profile = lazy(() => import('./views/Profile').then((module) => ({ default: module.Profile })));
+const AptitudeTest = lazy(() => import('./views/AptitudeTest').then((module) => ({ default: module.AptitudeTest })));
+const Jobs = lazy(() => import('./views/Jobs').then((module) => ({ default: module.Jobs })));
+const Settings = lazy(() => import('./views/Settings').then((module) => ({ default: module.Settings })));
+const ArenaLobby = lazy(() => import('./views/ArenaLobby').then((module) => ({ default: module.ArenaLobby })));
+const ResumeBuilder = lazy(() => import('./views/ResumeBuilder').then((module) => ({ default: module.ResumeBuilder })));
+const Blackhole = lazy(() => import('./components/Blackhole').then((module) => ({ default: module.Blackhole })));
 
 function App() {
   const { user, loading } = useAuth();
   const [mode, setMode] = useState<GameMode>(GameMode.AUTH);
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [scheduledBattles, setScheduledBattles] = useState<ScheduledBattle[]>([]);
+  const [scheduledBattles, setScheduledBattles] = useState<ScheduledBattle[]>(() =>
+    readStorage<ScheduledBattle[]>(storageKeys.scheduledBattles, []),
+  );
 
-  // Update mode based on auth state
   useEffect(() => {
-    if (!loading) {
-      if (user) {
-        if (mode === GameMode.AUTH) {
-          setMode(GameMode.DASHBOARD);
-        }
-      } else {
-        setMode(GameMode.AUTH);
-      }
+    if (loading) {
+      return;
     }
-  }, [user, loading]);
 
-  // Load from local storage on init
-  useEffect(() => {
-    const saved = localStorage.getItem('scheduled_battles');
-    if (saved) {
-      try {
-        setScheduledBattles(JSON.parse(saved));
-      } catch (e) {
-        console.error("Failed to parse scheduled battles", e);
+    if (user) {
+      if (mode === GameMode.AUTH) {
+        setMode(GameMode.DASHBOARD);
       }
+      return;
     }
-  }, []);
 
-  // Save to local storage on change
+    setMode(GameMode.AUTH);
+    setIsChatOpen(false);
+  }, [loading, mode, user]);
+
   useEffect(() => {
-    localStorage.setItem('scheduled_battles', JSON.stringify(scheduledBattles));
+    writeStorage(storageKeys.scheduledBattles, scheduledBattles);
   }, [scheduledBattles]);
 
   const handleAddBattle = (battle: ScheduledBattle) => {
-    setScheduledBattles(prev => [...prev, battle]);
+    setScheduledBattles((previousBattles) => [...previousBattles, battle]);
   };
 
   const handleRemoveBattle = (id: string) => {
-    setScheduledBattles(prev => prev.filter(b => b.id !== id));
-  };
-
-  // Wrapper to switch mode
-  const handleSetMode = (newMode: GameMode) => {
-    setMode(newMode);
+    setScheduledBattles((previousBattles) => previousBattles.filter((battle) => battle.id !== id));
   };
 
   const renderView = () => {
     switch (mode) {
       case GameMode.AUTH:
-        return <Auth setMode={handleSetMode} />;
+        return <Auth setMode={setMode} />;
       case GameMode.HOME:
-        return <Landing setMode={handleSetMode} onScheduleBattle={handleAddBattle} />;
+        return <Landing setMode={setMode} onScheduleBattle={handleAddBattle} />;
       case GameMode.DASHBOARD:
-        return (
-          <Dashboard
-            setMode={handleSetMode}
-            scheduledBattles={scheduledBattles}
-            onRemoveBattle={handleRemoveBattle}
-          />
-        );
+        return <Dashboard setMode={setMode} scheduledBattles={scheduledBattles} onRemoveBattle={handleRemoveBattle} />;
       case GameMode.BATTLE:
       case GameMode.ASSESSMENT:
         return <BattleArena key={mode} mode={mode} setMode={setMode} />;
       case GameMode.PRACTICE:
         return <BattleArena key="practice" mode={GameMode.PRACTICE} />;
       case GameMode.ARENA:
-        return <ArenaLobby setMode={handleSetMode} />;
+        return <ArenaLobby setMode={setMode} />;
       case GameMode.VISUALIZER:
         return <Visualizer />;
       case GameMode.PLAYGROUND:
@@ -109,54 +93,50 @@ function App() {
       case GameMode.SETTINGS:
         return <Settings />;
       case GameMode.RESUME_BUILDER:
-        return <ResumeBuilder setMode={handleSetMode} />;
+        return <ResumeBuilder setMode={setMode} />;
       default:
-        return <Landing setMode={handleSetMode} />;
+        return <Landing setMode={setMode} onScheduleBattle={handleAddBattle} />;
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex h-full w-full bg-slate-950">
+        <AppLoader label="Connecting account" />
+      </div>
+    );
+  }
+
+  const showNavigation = mode !== GameMode.AUTH;
+
   return (
-    // Main App Container
-    // Uses flex-col-reverse on mobile (Navbar at bottom) and flex-row on desktop (Navbar at left)
-    // h-full ensures it takes the full 100vh provided by #root
-    <div className="w-full h-full flex flex-col-reverse md:flex-row bg-[#0f0f10] text-slate-200 font-sans overflow-hidden">
+    <div className="flex h-full w-full flex-col-reverse overflow-hidden bg-slate-950 text-slate-100 md:flex-row">
+      {showNavigation && <Navbar currentMode={mode} setMode={setMode} />}
 
-      {/* Navigation (Flex Item, shrink-0) */}
-      {mode !== GameMode.AUTH && (
-        <Navbar
-          currentMode={mode}
-          setMode={handleSetMode}
-        />
-      )}
+      <main className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.14),_transparent_34%),radial-gradient(circle_at_bottom_right,_rgba(45,212,191,0.1),_transparent_34%),linear-gradient(180deg,_#020617_0%,_#0f172a_100%)]">
+        <div className="pointer-events-none absolute inset-0 -z-10 opacity-40" style={{ backgroundImage: 'linear-gradient(rgba(148,163,184,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.08) 1px, transparent 1px)', backgroundSize: '64px 64px' }} />
 
-      {/* Main Content Area (Flex Item, flex-1) */}
-      {/* overflow-hidden ensures internal scroll containers work properly */}
-      <main className="flex-1 flex flex-col min-h-0 overflow-hidden relative bg-[#0f0f10]">
-        {/* Background Effects */}
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTTAgNDBWMHptNDAgMEwwIDAiIHN0cm9rZT0iIzMzNDE1NSIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1c2UoI2dyaWQpIiAvPjwvc3ZnPg==')] opacity-[0.03] pointer-events-none -z-10"></div>
-
-        {/* View Container - Flex-1 to consume all available space in main */}
-        <div className="flex-1 w-full h-full flex flex-col overflow-hidden relative">
-          {renderView()}
+        <div className="relative flex h-full w-full flex-1 flex-col overflow-hidden">
+          <Suspense fallback={<AppLoader label="Loading module" />}>{renderView()}</Suspense>
         </div>
 
-        {/* Chatbot Floating Button & Interface */}
-        {mode !== GameMode.AUTH && (
+        {showNavigation && (
           <>
             {!isChatOpen && (
               <button
                 onClick={() => setIsChatOpen(true)}
-                className="absolute bottom-6 right-6 p-4 bg-cyber-purple hover:bg-purple-600 text-white rounded-full shadow-[0_0_20px_rgba(139,92,246,0.5)] transition-all hover:scale-110 z-50 group animate-bounce-subtle"
-                title="Open AI Assistant"
+                className="absolute bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-2xl border border-sky-400/40 bg-sky-500 text-white shadow-[0_24px_60px_rgba(14,165,233,0.34)] transition hover:-translate-y-1 hover:bg-sky-400"
+                title="Open AI assistant"
               >
-                <MessageSquare size={24} fill="currentColor" className="text-white" />
-                <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 px-2 py-1 bg-[#18181b] border border-[#333] text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-xl">
-                  Blackhole AI
-                </span>
+                <MessageSquare size={22} />
               </button>
             )}
 
-            {isChatOpen && <Blackhole onClose={() => setIsChatOpen(false)} />}
+            {isChatOpen && (
+              <Suspense fallback={null}>
+                <Blackhole onClose={() => setIsChatOpen(false)} />
+              </Suspense>
+            )}
           </>
         )}
       </main>

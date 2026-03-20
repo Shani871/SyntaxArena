@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FileText, Search, Plus, Save, Edit3, Trash2, Folder, ChevronRight, CornerDownRight, X, Sparkles } from 'lucide-react';
 import { DocChat } from '../components/DocChat';
+import { readStorage, removeStorage, storageKeys, subscribeToStorage } from '../utils/storage';
 
 interface Doc {
     id: string;
@@ -49,26 +50,19 @@ export const Documentation: React.FC = () => {
     // Sync docs from localStorage (from Visualizer's "Save as Doc" feature)
     useEffect(() => {
         const syncFromLocalStorage = () => {
-            const savedDocs = localStorage.getItem('syntaxarena_docs');
-            if (savedDocs) {
-                const parsedDocs: Doc[] = JSON.parse(savedDocs);
-                if (parsedDocs.length > 0) {
-                    setDocs(prev => {
-                        // Add only new docs (by ID) to avoid duplicates
-                        const existingIds = new Set(prev.map(d => d.id));
-                        const newDocs = parsedDocs.filter(d => !existingIds.has(d.id));
-                        return [...prev, ...newDocs];
-                    });
-                    // Clear after importing
-                    localStorage.removeItem('syntaxarena_docs');
-                }
+            const parsedDocs = readStorage<Doc[]>(storageKeys.documents, []);
+            if (parsedDocs.length > 0) {
+                setDocs(prev => {
+                    const existingIds = new Set(prev.map(d => d.id));
+                    const newDocs = parsedDocs.filter(d => !existingIds.has(d.id));
+                    return newDocs.length > 0 ? [...prev, ...newDocs] : prev;
+                });
+                removeStorage(storageKeys.documents);
             }
         };
 
-        // Check on mount and periodically
         syncFromLocalStorage();
-        const interval = setInterval(syncFromLocalStorage, 2000);
-        return () => clearInterval(interval);
+        return subscribeToStorage(storageKeys.documents, syncFromLocalStorage);
     }, []);
 
     const selectedDoc = docs.find(d => d.id === selectedDocId);
